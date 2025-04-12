@@ -276,7 +276,7 @@
      - **200 OK**: Returns a preview of generated flashcards along with generation metadata.
        ```json
        {
-         "generationId": "uuid",
+         "generation_id": "uuid",
          "input_text": "Text between 1000 and 10000 characters",
          "cards": [
            {
@@ -292,13 +292,13 @@
 
 2. **Get Generation Details**
    - **Method**: GET
-   - **URL**: `/api/generations/{generationId}`
+   - **URL**: `/api/generations/{generation_id}`
    - **Description**: Retrieve details of a flashcard generation process including flashcards and metadata.
    - **Response**:
      - **200 OK**: Returns generation details.
        ```json
        {
-         "generationId": "uuid",
+         "generation_id": "uuid",
          "input_text": "Provided text",
          "cards": [
            {
