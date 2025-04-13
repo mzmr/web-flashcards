@@ -1,4 +1,5 @@
 import type { Database } from "./db/database.types";
+import type { ZodIssue } from "zod";
 
 /**
  * Wspólne typy
@@ -12,6 +13,15 @@ export interface Pagination {
   page: number;
   limit: number;
   total: number;
+}
+
+/**
+ * Typy odpowiedzi błędów
+ */
+export interface ErrorResponse {
+  error: string;
+  code?: string;
+  details?: ZodIssue[];
 }
 
 /**

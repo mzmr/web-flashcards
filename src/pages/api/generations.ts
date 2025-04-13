@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { APIRoute } from "astro";
-import type { GenerateFlashcardsCommand } from "../../types";
+import type { GenerateFlashcardsCommand, ErrorResponse } from "../../types";
 import { DEFAULT_USER_ID } from "../../db/supabase.client";
 import { GenerationService, GenerationServiceError } from "../../lib/services/generation.service";
 
@@ -22,13 +22,16 @@ export const POST: APIRoute = async ({ request, locals }) => {
     const validationResult = generateFlashcardsSchema.safeParse(body);
 
     if (!validationResult.success) {
-      return new Response(
-        JSON.stringify({
-          error: "Invalid input data",
-          details: validationResult.error.issues,
-        }),
-        { status: 400 }
-      );
+      const errorResponse: ErrorResponse = {
+        error: "Invalid input data",
+        details: validationResult.error.issues,
+      };
+      return new Response(JSON.stringify(errorResponse), {
+        status: 400,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
     }
 
     const command = validationResult.data as GenerateFlashcardsCommand;
@@ -37,22 +40,47 @@ export const POST: APIRoute = async ({ request, locals }) => {
     const generationService = new GenerationService(locals.supabase, DEFAULT_USER_ID);
     const result = await generationService.generateFlashcards(command);
 
-    return new Response(JSON.stringify(result), { status: 201 });
+    return new Response(JSON.stringify(result), {
+      status: 201,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
   } catch (error) {
     console.error("Error while generating flashcards:", error);
 
     if (error instanceof GenerationServiceError) {
+      const errorResponse: ErrorResponse = {
+        error: error.message,
+        code: error.code,
+      };
+
       if (error.code === "CARD_SET_NOT_FOUND") {
-        return new Response(JSON.stringify({ error: error.message }), { status: 404 });
+        return new Response(JSON.stringify(errorResponse), {
+          status: 404,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
       }
-      return new Response(JSON.stringify({ error: error.message }), { status: 400 });
+
+      return new Response(JSON.stringify(errorResponse), {
+        status: 400,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
     }
 
-    return new Response(
-      JSON.stringify({
-        error: "Internal server error",
-      }),
-      { status: 500 }
-    );
+    const errorResponse: ErrorResponse = {
+      error: "Internal server error",
+      code: "UNKNOWN_ERROR",
+    };
+    return new Response(JSON.stringify(errorResponse), {
+      status: 500,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
   }
 };
