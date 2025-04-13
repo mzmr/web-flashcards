@@ -121,7 +121,6 @@ export interface GenerateFlashcardsCommand {
 // Odpowiedź natychmiastowa z podglądem wygenerowanych fiszek
 export interface GenerateFlashcardsResponseDTO {
   generation_id: UUID;
-  input_text: string;
   cards: { front: string; back: string }[];
   created_at: Timestamp;
   updated_at: Timestamp;

@@ -277,7 +277,6 @@
        ```json
        {
          "generation_id": "uuid",
-         "input_text": "Text between 1000 and 10000 characters",
          "cards": [
            {
              "front": "Generated front text",

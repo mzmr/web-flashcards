@@ -46,7 +46,6 @@ export class GenerationService {
 
       return {
         generation_id: generation.id,
-        input_text: command.input_text,
         cards: mockCards,
         created_at: generation.created_at,
         updated_at: generation.updated_at,
