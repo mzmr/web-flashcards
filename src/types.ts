@@ -1,3 +1,5 @@
+import type { Database } from "./db/database.types";
+
 /**
  * Wspólne typy
  */
@@ -137,3 +139,8 @@ export interface GetGenerationDetailsResponseDTO {
   created_at: Timestamp;
   updated_at: Timestamp;
 }
+
+// Aliasy typów z bazy danych
+export type Generation = Database["public"]["Tables"]["generations"]["Row"];
+export type CardSet = Database["public"]["Tables"]["card_sets"]["Row"];
+export type GenerationError = Database["public"]["Tables"]["generation_errors"]["Insert"];
