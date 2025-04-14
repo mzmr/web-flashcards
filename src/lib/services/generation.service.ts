@@ -30,15 +30,11 @@ export class GenerationService {
     const startTime = Date.now();
 
     try {
-      // 1. Verify card set access
-      await this.verifyCardSetAccess(command.card_set_id);
-
-      // 2. Generate mock cards
+      // 1. Generate mock cards
       const mockCards = this.generateMockCards(command.input_text);
 
-      // 3. Save generation to database
+      // 2. Save generation to database
       const generation = await this.saveGeneration({
-        card_set_id: command.card_set_id,
         input_text: command.input_text,
         duration: Date.now() - startTime,
         generated_count: mockCards.length,
@@ -97,7 +93,6 @@ export class GenerationService {
    * @throws {GenerationServiceError} When generation cannot be saved
    */
   private async saveGeneration(params: {
-    card_set_id: string;
     input_text: string;
     duration: number;
     generated_count: number;
@@ -105,7 +100,6 @@ export class GenerationService {
     const { data: generation, error: generationError } = await this.supabase
       .from("generations")
       .insert({
-        card_set_id: params.card_set_id,
         input_text: params.input_text,
         user_id: this.userId,
         model: "mock-v1",

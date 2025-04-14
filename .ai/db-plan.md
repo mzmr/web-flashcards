@@ -24,6 +24,7 @@ Ta tabela jest zarządzana przez Supabase Auth
 
 - `id`: UUID, PRIMARY KEY
 - `card_set_id`: UUID, NOT NULL, REFERENCES `card_sets(id)` ON DELETE CASCADE
+- `generation_id`: UUID, NULLABLE, REFERENCES `generations(id)` ON DELETE SET NULL
 - `front`: VARCHAR(300), NOT NULL
 - `back`: VARCHAR(300), NOT NULL
 - `source`: card_source, NOT NULL
@@ -42,7 +43,6 @@ Ta tabela jest zarządzana przez Supabase Auth
 - `accepted_edited_count`: INT, NULLABLE, CHECK (accepted_edited_count >= 0)
 - `model`: VARCHAR(100), NOT NULL
 - `user_id`: UUID, NOT NULL, REFERENCES `users(id)` ON DELETE CASCADE
-- `card_set_id`: UUID, NOT NULL, REFERENCES `card_sets(id)` ON DELETE CASCADE
 - `created_at`: TIMESTAMPTZ, NOT NULL, DEFAULT NOW()
 - `updated_at`: TIMESTAMPTZ, NOT NULL, DEFAULT NOW()
 
@@ -61,7 +61,7 @@ Ta tabela jest zarządzana przez Supabase Auth
 - `users` (1) ← (N) `card_sets`
 - `card_sets` (1) ← (N) `cards`
 - `users` (1) ← (N) `generations`
-- `card_sets` (1) ← (N) `generations`
+- `generations` (1) ← (N) `cards`
 - `users` (1) ← (N) `generation_errors`
 
 ## 3. Indeksy
@@ -71,12 +71,12 @@ Ta tabela jest zarządzana przez Supabase Auth
   - Indeks na kolumnie `created_at`
 - W tabeli `cards`:
   - Indeks na kolumnie `card_set_id`
+  - Indeks na kolumnie `generation_id`
   - Indeksy pg_trgm na kolumnach `front` oraz `back`:
     - `CREATE INDEX idx_cards_front_trgm ON cards USING gin (front gin_trgm_ops);`
     - `CREATE INDEX idx_cards_back_trgm ON cards USING gin (back gin_trgm_ops);`
 - W tabeli `generations`:
   - Indeks na kolumnie `user_id`
-  - Indeks na kolumnie `card_set_id`
 - W tabeli `generation_errors`:
   - Indeks na kolumnie `user_id`
 

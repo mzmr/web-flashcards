@@ -125,7 +125,6 @@ export interface DeleteCardResponseDTO {
 // Command Model dla procesu generowania fiszek (Request)
 export interface GenerateFlashcardsCommand {
   input_text: string; // długość tekstu od 1000 do 10000 znaków
-  card_set_id: UUID;
 }
 
 // Odpowiedź natychmiastowa z podglądem wygenerowanych fiszek
@@ -144,6 +143,8 @@ export interface GetGenerationDetailsResponseDTO {
   metadata: {
     duration: number;
     generated_count: number;
+    accepted_unedited_count: number | null;
+    accepted_edited_count: number | null;
   };
   created_at: Timestamp;
   updated_at: Timestamp;

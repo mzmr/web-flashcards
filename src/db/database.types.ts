@@ -50,6 +50,7 @@ export interface Database {
           card_set_id: string;
           created_at: string;
           front: string;
+          generation_id: string | null;
           id: string;
           source: Database["public"]["Enums"]["card_source"];
           updated_at: string;
@@ -59,6 +60,7 @@ export interface Database {
           card_set_id: string;
           created_at?: string;
           front: string;
+          generation_id?: string | null;
           id?: string;
           source: Database["public"]["Enums"]["card_source"];
           updated_at?: string;
@@ -68,6 +70,7 @@ export interface Database {
           card_set_id?: string;
           created_at?: string;
           front?: string;
+          generation_id?: string | null;
           id?: string;
           source?: Database["public"]["Enums"]["card_source"];
           updated_at?: string;
@@ -78,6 +81,13 @@ export interface Database {
             columns: ["card_set_id"];
             isOneToOne: false;
             referencedRelation: "card_sets";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "cards_generation_id_fkey";
+            columns: ["generation_id"];
+            isOneToOne: false;
+            referencedRelation: "generations";
             referencedColumns: ["id"];
           },
         ];
@@ -116,7 +126,6 @@ export interface Database {
         Row: {
           accepted_edited_count: number | null;
           accepted_unedited_count: number | null;
-          card_set_id: string;
           created_at: string;
           duration: number;
           generated_count: number;
@@ -129,7 +138,6 @@ export interface Database {
         Insert: {
           accepted_edited_count?: number | null;
           accepted_unedited_count?: number | null;
-          card_set_id: string;
           created_at?: string;
           duration: number;
           generated_count: number;
@@ -142,7 +150,6 @@ export interface Database {
         Update: {
           accepted_edited_count?: number | null;
           accepted_unedited_count?: number | null;
-          card_set_id?: string;
           created_at?: string;
           duration?: number;
           generated_count?: number;
@@ -152,15 +159,7 @@ export interface Database {
           updated_at?: string;
           user_id?: string;
         };
-        Relationships: [
-          {
-            foreignKeyName: "generations_card_set_id_fkey";
-            columns: ["card_set_id"];
-            isOneToOne: false;
-            referencedRelation: "card_sets";
-            referencedColumns: ["id"];
-          },
-        ];
+        Relationships: [];
       };
     };
     Views: Record<never, never>;

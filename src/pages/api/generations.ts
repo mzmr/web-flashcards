@@ -10,7 +10,6 @@ const generateFlashcardsSchema = z.object({
     .string()
     .min(1000, "Text must be at least 1000 characters long")
     .max(10000, "Text cannot exceed 10000 characters"),
-  card_set_id: z.string().uuid("Invalid UUID format"),
 });
 
 export const prerender = false;
