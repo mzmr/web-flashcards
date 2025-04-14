@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "../../db/supabase.client";
-import type { CardSetDTO, CreateCardSetCommand, CardSet, UUID } from "../../types";
+import type { CardSetDTO, CreateCardSetCommand, CardSet, UUID, CardSetDetailDTO, Card } from "../../types";
 
 export class CardSetServiceError extends Error {
   constructor(
@@ -91,6 +91,53 @@ export class CardSetService {
     return {
       cardSets,
       total: count,
+    };
+  }
+
+  async getCardSetDetails(cardSetId: UUID): Promise<CardSetDetailDTO | null> {
+    // Pobranie podstawowych informacji o zestawie
+    const { data: cardSet, error: cardSetError } = await this.supabase
+      .from("card_sets")
+      .select("*")
+      .eq("id", cardSetId)
+      .single();
+
+    if (cardSetError) {
+      throw new CardSetServiceError(`Błąd podczas pobierania zestawu: ${cardSetError.message}`, "GET_CARD_SET_FAILED");
+    }
+
+    if (!cardSet) {
+      return null;
+    }
+
+    // Pobranie powiązanych fiszek
+    const { data: cards, error: cardsError } = await this.supabase
+      .from("cards")
+      .select("*")
+      .eq("card_set_id", cardSetId);
+
+    if (cardsError) {
+      throw new CardSetServiceError(`Błąd podczas pobierania fiszek: ${cardsError.message}`, "GET_CARDS_FAILED");
+    }
+
+    const typedCardSet = cardSet as CardSet;
+    const typedCards = (cards || []) as Card[];
+
+    // Mapowanie na DTO
+    return {
+      id: typedCardSet.id,
+      name: typedCardSet.name,
+      created_at: typedCardSet.created_at,
+      updated_at: typedCardSet.updated_at,
+      cards: typedCards.map((card) => ({
+        id: card.id,
+        front: card.front,
+        back: card.back,
+        source: card.source,
+        generation_id: card.generation_id,
+        created_at: card.created_at,
+        updated_at: card.updated_at,
+      })),
     };
   }
 }

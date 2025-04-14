@@ -154,3 +154,4 @@ export interface GetGenerationDetailsResponseDTO {
 export type Generation = Database["public"]["Tables"]["generations"]["Row"];
 export type CardSet = Database["public"]["Tables"]["card_sets"]["Row"];
 export type GenerationError = Database["public"]["Tables"]["generation_errors"]["Insert"];
+export type Card = Database["public"]["Tables"]["cards"]["Row"];
