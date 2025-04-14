@@ -44,4 +44,53 @@ export class CardSetService {
       updated_at: cardSet.updated_at,
     };
   }
+
+  async listCardSets(
+    userId: UUID,
+    page: number,
+    limit: number,
+    sort?: "created_at" | "updated_at" | "name"
+  ): Promise<{ cardSets: CardSetDTO[]; total: number }> {
+    // Przygotowanie zapytania bazowego
+    let query = this.supabase.from("card_sets").select("*", { count: "exact" }).eq("user_id", userId);
+
+    // Dodanie sortowania
+    if (sort) {
+      query = query.order(sort, { ascending: sort === "name" });
+    } else {
+      query = query.order("updated_at", { ascending: false });
+    }
+
+    // Dodanie paginacji
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+    query = query.range(from, to);
+
+    // Wykonanie zapytania
+    const { data, error, count } = await query;
+
+    if (error) {
+      throw new CardSetServiceError(
+        `Błąd podczas pobierania zestawów fiszek: ${error.message}`,
+        "LIST_CARD_SETS_FAILED"
+      );
+    }
+
+    if (!data || count === null) {
+      throw new CardSetServiceError("Nie udało się pobrać zestawów fiszek", "LIST_CARD_SETS_FAILED");
+    }
+
+    // Mapowanie wyników do DTO
+    const cardSets: CardSetDTO[] = data.map((cardSet: CardSet) => ({
+      id: cardSet.id,
+      name: cardSet.name,
+      created_at: cardSet.created_at,
+      updated_at: cardSet.updated_at,
+    }));
+
+    return {
+      cardSets,
+      total: count,
+    };
+  }
 }
