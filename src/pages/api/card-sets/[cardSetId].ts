@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
 import { z } from "zod";
-import type { ErrorResponse } from "../../../types";
+import type { ErrorResponse, DeleteCardSetResponseDTO } from "../../../types";
 import { CardSetService, CardSetServiceError } from "../../../lib/services/card-set.service";
 import { DEFAULT_USER_ID } from "@/db/supabase.client";
 
@@ -127,6 +127,78 @@ export const PUT: APIRoute = async ({ params, locals, request }) => {
     });
   } catch (error) {
     console.error("Błąd podczas aktualizacji zestawu:", error);
+
+    if (error instanceof CardSetServiceError) {
+      if (error.code === "CARD_SET_NOT_FOUND") {
+        return new Response(
+          JSON.stringify({
+            error: error.message,
+            code: error.code,
+          } satisfies ErrorResponse),
+          {
+            status: 404,
+            headers: { "Content-Type": "application/json" },
+          }
+        );
+      }
+
+      return new Response(
+        JSON.stringify({
+          error: error.message,
+          code: error.code,
+        } satisfies ErrorResponse),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    return new Response(
+      JSON.stringify({
+        error: "Wystąpił nieoczekiwany błąd podczas przetwarzania żądania",
+      } satisfies ErrorResponse),
+      {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+  }
+};
+
+export const DELETE: APIRoute = async ({ params, locals }) => {
+  try {
+    // Walidacja cardSetId
+    const result = uuidSchema.safeParse(params.cardSetId);
+    if (!result.success) {
+      return new Response(
+        JSON.stringify({
+          error: "Nieprawidłowy format identyfikatora zestawu",
+          details: result.error.issues,
+        } satisfies ErrorResponse),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    const cardSetId = result.data;
+    const cardSetService = new CardSetService(locals.supabase);
+
+    await cardSetService.deleteCardSet(DEFAULT_USER_ID, cardSetId);
+
+    return new Response(
+      JSON.stringify({
+        message: "Zestaw fiszek został pomyślnie usunięty",
+      } satisfies DeleteCardSetResponseDTO),
+      {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+  } catch (error) {
+    console.error("Błąd podczas usuwania zestawu:", error);
 
     if (error instanceof CardSetServiceError) {
       if (error.code === "CARD_SET_NOT_FOUND") {

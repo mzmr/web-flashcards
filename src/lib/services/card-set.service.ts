@@ -189,4 +189,32 @@ export class CardSetService {
       updated_at: cardSet.updated_at,
     };
   }
+
+  async deleteCardSet(userId: UUID, cardSetId: UUID): Promise<void> {
+    // Sprawdzenie czy zestaw istnieje i należy do użytkownika
+    const { data: existingSet, error: checkError } = await this.supabase
+      .from("card_sets")
+      .select("*")
+      .eq("id", cardSetId)
+      .eq("user_id", userId)
+      .single();
+
+    if (checkError) {
+      throw new CardSetServiceError(
+        `Błąd podczas sprawdzania zestawu: ${checkError.message}`,
+        "DELETE_CARD_SET_FAILED"
+      );
+    }
+
+    if (!existingSet) {
+      throw new CardSetServiceError("Nie znaleziono zestawu fiszek lub brak uprawnień", "CARD_SET_NOT_FOUND");
+    }
+
+    // Usunięcie zestawu (kaskadowe usunięcie fiszek jest obsługiwane przez bazę danych)
+    const { error: deleteError } = await this.supabase.from("card_sets").delete().eq("id", cardSetId);
+
+    if (deleteError) {
+      throw new CardSetServiceError(`Błąd podczas usuwania zestawu: ${deleteError.message}`, "DELETE_CARD_SET_FAILED");
+    }
+  }
 }
