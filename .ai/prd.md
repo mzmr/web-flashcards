@@ -95,6 +95,13 @@ Kryteria akceptacji:
 - System prosi o potwierdzenie przed wykonaniem operacji usuwania.
 - Po usunięciu zmiany są widoczne w interfejsie.
 
+US-008
+Tytuł: Przeglądanie szczegółowe zestawu fiszek
+Opis: Jako użytkownik chcę przeglądać fiszki należące do wybranego przeze mnie zestawu fiszek, aby móc łatwo zarządzać materiałem edukacyjnym.
+Kryteria akceptacji:
+- System wyświetla listę fiszek, zawierających przód i tył fiszki, a także etykietę informującą o sposobie jej utworzenia.
+- Użytkownik może wybrać konkretną fiszkę, aby ją edytować.
+
 ## 6. Metryki sukcesu
 - 75% fiszek wygenerowanych przez AI musi być zaakceptowanych przez użytkownika.
 - 75% wszystkich fiszek tworzonych w aplikacji powinno pochodzić z generowania przez AI.
