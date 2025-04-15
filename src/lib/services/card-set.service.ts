@@ -140,4 +140,53 @@ export class CardSetService {
       })),
     };
   }
+
+  async updateCardSet(userId: UUID, cardSetId: UUID, name: string): Promise<CardSetDTO> {
+    // Sprawdzenie czy zestaw istnieje i należy do użytkownika
+    const { data: existingSet, error: checkError } = await this.supabase
+      .from("card_sets")
+      .select("*")
+      .eq("id", cardSetId)
+      .eq("user_id", userId)
+      .single();
+
+    if (checkError) {
+      throw new CardSetServiceError(
+        `Błąd podczas sprawdzania zestawu: ${checkError.message}`,
+        "UPDATE_CARD_SET_FAILED"
+      );
+    }
+
+    if (!existingSet) {
+      throw new CardSetServiceError("Nie znaleziono zestawu fiszek lub brak uprawnień", "CARD_SET_NOT_FOUND");
+    }
+
+    // Aktualizacja zestawu
+    const { data: updatedSet, error: updateError } = await this.supabase
+      .from("card_sets")
+      .update({ name })
+      .eq("id", cardSetId)
+      .select()
+      .single();
+
+    if (updateError) {
+      throw new CardSetServiceError(
+        `Błąd podczas aktualizacji zestawu: ${updateError.message}`,
+        "UPDATE_CARD_SET_FAILED"
+      );
+    }
+
+    if (!updatedSet) {
+      throw new CardSetServiceError("Nie udało się zaktualizować zestawu fiszek", "UPDATE_CARD_SET_FAILED");
+    }
+
+    const cardSet: CardSet = updatedSet;
+
+    return {
+      id: cardSet.id,
+      name: cardSet.name,
+      created_at: cardSet.created_at,
+      updated_at: cardSet.updated_at,
+    };
+  }
 }
