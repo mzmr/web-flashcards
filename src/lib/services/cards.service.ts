@@ -1,5 +1,11 @@
 import type { SupabaseClient } from "@/db/supabase.client";
-import type { UpdateCardCommand, UpdateCardResponseDTO, CardDTO, DeleteCardResponseDTO } from "@/types";
+import type {
+  UpdateCardCommand,
+  UpdateCardResponseDTO,
+  CardDTO,
+  DeleteCardResponseDTO,
+  CardCreateInput,
+} from "@/types";
 
 export class CardsServiceError extends Error {
   constructor(
@@ -121,5 +127,60 @@ export class CardsService {
     return {
       message: "Fiszka została pomyślnie usunięta",
     };
+  }
+
+  /**
+   * Dodaje nowe fiszki do zestawu
+   * @param cardSetId - ID zestawu fiszek
+   * @param cards - Lista fiszek do dodania
+   * @param userId - ID użytkownika wykonującego operację
+   * @returns Lista utworzonych fiszek
+   * @throws {CardsServiceError} Gdy zestaw fiszek nie istnieje lub brak dostępu
+   * @throws {CardsServiceError} Gdy nie udało się utworzyć fiszek
+   */
+  async createCards(cardSetId: string, cards: CardCreateInput[], userId: string): Promise<CardDTO[]> {
+    // 1. Sprawdź czy zestaw fiszek istnieje i należy do użytkownika
+    const { data: cardSet, error: cardSetError } = await this.supabase
+      .from("card_sets")
+      .select("id")
+      .eq("id", cardSetId)
+      .eq("user_id", userId)
+      .single();
+
+    if (cardSetError || !cardSet) {
+      throw new CardsServiceError("Zestaw fiszek nie istnieje lub brak dostępu", "CARD_SET_NOT_FOUND");
+    }
+
+    // 2. Przygotuj dane do insertu
+    const cardsToInsert = cards.map((card) => ({
+      ...card,
+      card_set_id: cardSetId,
+      generation_id: card.source === "user_created" ? null : card.generation_id,
+    }));
+
+    // 3. Dodaj fiszki do bazy danych
+    const { data: createdCards, error: insertError } = await this.supabase
+      .from("cards")
+      .insert(cardsToInsert)
+      .select("*");
+
+    if (insertError) {
+      throw new CardsServiceError("Nie udało się utworzyć fiszek", "CREATE_CARDS_FAILED");
+    }
+
+    if (!createdCards) {
+      throw new CardsServiceError("Nie utworzono żadnych fiszek", "NO_CARDS_CREATED");
+    }
+
+    // 4. Zwróć utworzone fiszki
+    return createdCards.map((card) => ({
+      id: card.id,
+      front: card.front,
+      back: card.back,
+      source: card.source,
+      generation_id: card.generation_id,
+      created_at: card.created_at,
+      updated_at: card.updated_at,
+    }));
   }
 }
