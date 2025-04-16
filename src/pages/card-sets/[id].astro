@@ -1,0 +1,18 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import { CardSetDetailsPage } from "@/components/CardSetDetailsPage";
+import type { UUID } from "@/types";
+
+const { id } = Astro.params;
+
+// Walidacja UUID
+if (!id || !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id)) {
+  return Astro.redirect("/card-sets");
+}
+
+const cardSetId = id as UUID;
+---
+
+<Layout title="Szczegóły zestawu fiszek">
+  <CardSetDetailsPage client:load cardSetId={cardSetId} />
+</Layout>
