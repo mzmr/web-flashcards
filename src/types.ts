@@ -16,6 +16,17 @@ export interface Pagination {
 }
 
 /**
+ * Typy dla tymczasowych fiszek w widoku dodawania
+ */
+export interface TemporaryCard {
+  tempId: string;
+  front: string;
+  back: string;
+  source: CardSource;
+  generation_id?: UUID;
+}
+
+/**
  * Typy odpowiedzi błędów
  */
 export interface ErrorResponse {

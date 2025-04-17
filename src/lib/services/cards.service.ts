@@ -66,6 +66,7 @@ export class CardsService {
       .update({
         front: data.front,
         back: data.back,
+        source: existingCard.source === "ai_generated" ? "ai_edited" : existingCard.source,
       })
       .eq("id", cardId)
       .eq("card_set_id", cardSetId)

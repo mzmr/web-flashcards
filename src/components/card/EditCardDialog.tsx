@@ -1,4 +1,4 @@
-import type { CardDTO, UpdateCardCommand } from "@/types";
+import type { TemporaryCard, UpdateCardCommand } from "@/types";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,34 +12,35 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 
 interface EditCardDialogProps {
-  card: CardDTO;
+  card?: TemporaryCard;
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  onUpdate: (data: UpdateCardCommand) => Promise<void>;
+  onSave: (data: UpdateCardCommand) => Promise<void>;
+  mode?: "edit" | "add";
 }
 
-export function EditCardDialog({ card, isOpen, onOpenChange, onUpdate }: EditCardDialogProps) {
+export function EditCardDialog({ card, isOpen, onOpenChange, onSave, mode = "edit" }: EditCardDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editData, setEditData] = useState<UpdateCardCommand>({
-    front: card.front,
-    back: card.back,
+    front: card?.front ?? "",
+    back: card?.back ?? "",
   });
 
   // Resetuj pola tekstowe przy otwarciu modala
   useEffect(() => {
     if (isOpen) {
       setEditData({
-        front: card.front,
-        back: card.back,
+        front: card?.front ?? "",
+        back: card?.back ?? "",
       });
     }
-  }, [isOpen, card.front, card.back]);
+  }, [isOpen, card?.front, card?.back]);
 
-  const handleUpdate = async () => {
+  const handleSave = async () => {
     if (editData.front.trim() === "" || editData.back.trim() === "") return;
     setIsSubmitting(true);
     try {
-      await onUpdate({
+      await onSave({
         front: editData.front.trim(),
         back: editData.back.trim(),
       });
@@ -49,12 +50,19 @@ export function EditCardDialog({ card, isOpen, onOpenChange, onUpdate }: EditCar
     }
   };
 
+  const isUnchanged =
+    mode === "edit" && card && editData.front.trim() === card.front && editData.back.trim() === card.back;
+
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Edytuj fiszkę</DialogTitle>
-          <DialogDescription>Wprowadź nową treść dla przodu i tyłu fiszki.</DialogDescription>
+          <DialogTitle>{mode === "edit" ? "Edytuj fiszkę" : "Dodaj nową fiszkę"}</DialogTitle>
+          <DialogDescription>
+            {mode === "edit"
+              ? "Wprowadź nową treść dla przodu i tyłu fiszki."
+              : "Wprowadź treść dla przodu i tyłu nowej fiszki."}
+          </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-2">
@@ -91,15 +99,10 @@ export function EditCardDialog({ card, isOpen, onOpenChange, onUpdate }: EditCar
             Anuluj
           </Button>
           <Button
-            onClick={handleUpdate}
-            disabled={
-              isSubmitting ||
-              editData.front.trim() === "" ||
-              editData.back.trim() === "" ||
-              (editData.front.trim() === card.front && editData.back.trim() === card.back)
-            }
+            onClick={handleSave}
+            disabled={isSubmitting || editData.front.trim() === "" || editData.back.trim() === "" || isUnchanged}
           >
-            {isSubmitting ? "Zapisywanie..." : "Zapisz"}
+            {isSubmitting ? "Zapisywanie..." : mode === "edit" ? "Zapisz" : "Dodaj"}
           </Button>
         </DialogFooter>
       </DialogContent>

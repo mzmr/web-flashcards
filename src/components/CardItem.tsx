@@ -1,24 +1,19 @@
-import { useState, memo } from "react";
+import { memo, useState } from "react";
 import { Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import type { CardDTO, CardSource, UpdateCardCommand } from "@/types";
 import { EditCardDialog } from "./card/EditCardDialog";
 import { DeleteCardDialog } from "./card/DeleteCardDialog";
 import { FlashcardContent } from "./card/CardContent";
+import type { CardDTO, UpdateCardCommand } from "@/types";
+import { sourceLabels, sourceBadgeVariants } from "@/lib/constants";
 
 interface CardItemProps {
   card: CardDTO;
   onUpdate: (data: UpdateCardCommand) => Promise<void>;
   onDelete: () => Promise<void>;
 }
-
-const sourceLabels: Record<CardSource, string> = {
-  ai_generated: "Wygenerowane przez AI",
-  ai_edited: "Wygenerowane przez AI, edytowane",
-  user_created: "Utworzone ręcznie",
-};
 
 export const CardItem = memo(function CardItem({ card, onUpdate, onDelete }: CardItemProps) {
   const [isEditing, setIsEditing] = useState(false);
@@ -28,7 +23,7 @@ export const CardItem = memo(function CardItem({ card, onUpdate, onDelete }: Car
     <>
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <Badge variant="secondary">{sourceLabels[card.source]}</Badge>
+          <Badge variant={sourceBadgeVariants[card.source]}>{sourceLabels[card.source]}</Badge>
           <div className="flex gap-1">
             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setIsEditing(true)}>
               <Pencil className="h-4 w-4" />
@@ -43,7 +38,19 @@ export const CardItem = memo(function CardItem({ card, onUpdate, onDelete }: Car
         </CardContent>
       </Card>
 
-      <EditCardDialog card={card} isOpen={isEditing} onOpenChange={setIsEditing} onUpdate={onUpdate} />
+      <EditCardDialog
+        card={{
+          tempId: card.id,
+          front: card.front,
+          back: card.back,
+          source: card.source,
+          generation_id: card.generation_id ?? undefined,
+        }}
+        isOpen={isEditing}
+        onOpenChange={setIsEditing}
+        onSave={onUpdate}
+        mode="edit"
+      />
 
       <DeleteCardDialog isOpen={isConfirmingDelete} onOpenChange={setIsConfirmingDelete} onDelete={onDelete} />
     </>

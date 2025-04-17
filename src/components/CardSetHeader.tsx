@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronLeft, Pencil, Trash2 } from "lucide-react";
+import { ChevronLeft, Pencil, Trash2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import type { CardSetDetailDTO } from "@/types";
+import { redirectTo } from "@/lib/api/helpers";
 
 interface CardSetHeaderProps {
   cardSet: CardSetDetailDTO;
@@ -48,7 +49,7 @@ export function CardSetHeader({ cardSet, onUpdateName, onDelete }: CardSetHeader
   return (
     <div className="flex items-center justify-between">
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => window.history.back()}>
+        <Button variant="ghost" size="icon" onClick={() => redirectTo("/card-sets")}>
           <ChevronLeft className="h-4 w-4" />
         </Button>
         <h1 className="text-2xl font-bold">{cardSet.name}</h1>
@@ -64,9 +65,15 @@ export function CardSetHeader({ cardSet, onUpdateName, onDelete }: CardSetHeader
         </Button>
       </div>
 
-      <Button variant="destructive" size="icon" onClick={() => setIsConfirmingDelete(true)}>
-        <Trash2 className="h-4 w-4" />
-      </Button>
+      <div className="flex items-center gap-2">
+        <Button variant="default" onClick={() => redirectTo(`/card-sets/${cardSet.id}/add-cards`)}>
+          <Plus className="h-4 w-4 mr-2" />
+          Dodaj fiszki
+        </Button>
+        <Button variant="destructive" size="icon" onClick={() => setIsConfirmingDelete(true)}>
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </div>
 
       {/* Dialog edycji nazwy */}
       <Dialog open={isEditingName} onOpenChange={setIsEditingName}>
