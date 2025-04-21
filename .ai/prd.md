@@ -44,9 +44,11 @@ US-001
 Tytuł: Rejestracja i logowanie
 Opis: Jako użytkownik chcę móc się zarejestrować oraz zalogować do systemu, aby korzystać z pełnej funkcjonalności aplikacji.
 Kryteria akceptacji:
-- Użytkownik może zarejestrować się, podając unikalny adres email i hasło.
+- Logowanie wymaga podania adresu email i hasła.
+- Rejestracja wymaga podania adresu email, hasła i potwierdzenia hasła.
 - System umożliwia logowanie przy użyciu zarejestrowanych danych.
 - Wyświetlane są odpowiednie komunikaty błędów przy nieprawidłowej rejestracji lub logowaniu.
+- Logowanie i rejestracja odbywają się na dedykowanych stronach.
 
 US-002
 Tytuł: Wprowadzanie tekstu do generowania fiszek przez AI
@@ -78,6 +80,8 @@ Opis: Jako użytkownik chcę przeglądać wszystkie moje zestawy fiszek, aby mó
 Kryteria akceptacji:
 - System wyświetla listę zestawów fiszek, zawierającą nazwę, oraz daty utworzenia i modyfikacji.
 - Użytkownik może wybrać konkretny zestaw, aby przejrzeć jego zawartość.
+- Lista zestawów fiszek zawiera wszystkie zestawy, które użytkownik ma zapisane w pamięci lokalnej swojej przeglądarki.
+- Lista zestawów fiszek zawiera wszystkie zestawy, które użytkownik ma zapisane w bazie danych.
 
 US-006
 Tytuł: Edycja fiszek i zestawu
@@ -101,6 +105,45 @@ Opis: Jako użytkownik chcę przeglądać fiszki należące do wybranego przeze 
 Kryteria akceptacji:
 - System wyświetla listę fiszek, zawierających przód i tył fiszki, a także etykietę informującą o sposobie jej utworzenia.
 - Użytkownik może wybrać konkretną fiszkę, aby ją edytować.
+
+US-009
+Tytuł: Tworzenie zestawów fiszek w bazie danych
+Opis: Jako zalogowany użytkownik chcę mieć możliwość dodania zestawu fiszek, aby móc dodać do niego fiszki.
+Kryteria akceptacji:
+- Użytkownik może utworzyć zestaw fiszek z wybraną przez siebie nazwą o długości do 300 znaków.
+- Utworzony zestaw fiszek jest zapisany w bazie danych i przypisany do użytkownika, który go stworzył.
+- Zestaw fiszek utworzony przez zalogowanego użytkownika NIE może zostać zapisany w pamięci przeglądarki.
+
+US-010
+Tytuł: Tworzenie zestawów fiszek po stronie klienta
+Opis: Jako niezalogowany użytkownik chcę mieć możliwość dodania zestawu fiszek, aby móc dodać do niego fiszki.
+Kryteria akceptacji:
+- Użytkownik może utworzyć zestaw fiszek z wybraną przez siebie nazwą o długości do 300 znaków.
+- Utworzony zestaw fiszek jest zapisany w lokalnej pamięci przeglądarki (local storage).
+- Zestaw fiszek utworzony przez niezalogowanego użytkownika NIE może zostać zapisany w bazie danych.
+
+US-011
+Tytuł: Przeniesienie lokalnego zestawu fiszek do bazy danych
+Opis: Jako zalogowany użytkownik chcę przenieść do bazy danych wszystkie zestawy fiszek, jakie mam obecnie zapisane lokalnie w pamięci mojej przeglądarki.
+Kryteria akceptacji:
+- Wszystkie zestawy fiszek istniejące w pamięci lokalnej przeglądarki użytkownika mogą zostać zapisane w bazie danych.
+- Wszystkie zestawy fiszek zostają usunięte z pamięci przeglądarki po zapisaniu w bazie danych.
+- Użytkownik może jednym przyciskiem zainicjować przeniesienie lokalnych zestawów fiszek do bazy danych.
+
+US-012
+Tytuł: Bezpieczny dostęp
+Opis: Jako użytkownik chcę ograniczyć dostęp do niektórych funkcjonalności systemu.
+Kryteria akceptacji:
+- Użytkownik MOŻE tworzyć lokalne zestawy fiszek bez logowania się do systemu (US-010).
+- Użytkownik NIE MOŻE tworzyć zestawów fiszek w bazie danych bez logowania się do systemu (US-011).
+- Użytkownik NIE MOŻE generować fiszek na podstawie wprowadzonego tekstu za pomocą AI (US-002, US-003).
+- Użytkownik MOŻE tworzyć fiszki ręcznie niezależnie od tego, czy jest zalogowany do systemu (US-004).
+- Fiszki dodane do lokalego zestawu fiszek zostają zapisane lokalnie w pamięci przeglądarki (US-004, US-010).
+- Fiszki dodane do zestawu fiszek zapisanego w bazie danych zostają zapisane w bazie danych (US-003, US-004, US-009).
+- Użytkownik może logować się do systemu poprzez przycisk w prawym górnym rogu.
+- Użytkownik może się wylogować z systemu poprzez przycisk w prawym górnym rogu w głównym @Layout.astro.
+- Nie korzystamy z zewnętrznych serwisów logowania (np. Google, GitHub).
+- Odzyskiwanie hasła powinno być możliwe.
 
 ## 6. Metryki sukcesu
 - 75% fiszek wygenerowanych przez AI musi być zaakceptowanych przez użytkownika.
