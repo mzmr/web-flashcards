@@ -1,0 +1,22 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import { RegisterForm } from "@/components/auth/RegisterForm";
+
+const handleSubmit = async (data: { email: string; password: string; confirmPassword: string }) => {
+  // Tymczasowa implementacja - będzie zaktualizowana później
+  console.log("Register attempt:", data);
+};
+---
+
+<Layout title="Rejestracja | Fiszki">
+  <main class="container flex-1 flex items-center justify-center min-h-[calc(100vh-4rem)] w-full">
+    <RegisterForm client:load onSubmit={handleSubmit} />
+  </main>
+</Layout>
+
+<style>
+  .container {
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+</style>
