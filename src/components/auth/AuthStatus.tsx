@@ -1,47 +1,43 @@
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { User } from "lucide-react";
 
 interface AuthStatusProps {
-  user: { email: string } | null;
-  onLogout: () => Promise<void>;
+  user?: {
+    email: string | null;
+  };
 }
 
-export function AuthStatus({ user, onLogout }: AuthStatusProps) {
-  if (!user) {
-    return (
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" asChild>
-          <a href="/auth/login">Zaloguj się</a>
-        </Button>
-        <Button asChild>
-          <a href="/auth/register">Zarejestruj się</a>
-        </Button>
-      </div>
-    );
-  }
+export function AuthStatus({ user }: AuthStatusProps) {
+  const handleLogout = async () => {
+    try {
+      const response = await fetch("/api/auth/logout", {
+        method: "POST",
+      });
+
+      if (!response.ok) {
+        throw new Error("Błąd podczas wylogowywania");
+      }
+
+      // Odśwież stronę po wylogowaniu
+      window.location.reload();
+    } catch (error) {
+      console.error("Błąd podczas wylogowywania:", error);
+    }
+  };
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon">
-          <User className="h-5 w-5" />
+    <div className="flex items-center gap-4">
+      {user ? (
+        <>
+          <span className="text-sm text-muted-foreground">{user.email}</span>
+          <Button variant="outline" onClick={handleLogout}>
+            Wyloguj się
+          </Button>
+        </>
+      ) : (
+        <Button variant="outline" asChild>
+          <a href="/auth/login">Zaloguj się</a>
         </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56">
-        <DropdownMenuItem className="font-normal">
-          <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">Konto</p>
-            <p className="text-xs text-muted-foreground">{user.email}</p>
-          </div>
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={onLogout}>Wyloguj się</DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+      )}
+    </div>
   );
 }

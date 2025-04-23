@@ -1,7 +1,6 @@
 import { z } from "zod";
 import type { APIRoute } from "astro";
 import type { GenerateFlashcardsCommand, ErrorResponse } from "../../types";
-import { DEFAULT_USER_ID } from "../../db/supabase.client";
 import { GenerationService, GenerationServiceError } from "../../lib/services/generation.service";
 
 // Schema walidacji dla danych wejściowych
@@ -16,6 +15,10 @@ export const prerender = false;
 
 export const POST: APIRoute = async ({ request, locals }) => {
   try {
+    if (!locals.user) {
+      return new Response(JSON.stringify({ error: "Wymagane zalogowanie" }), { status: 401 });
+    }
+
     // 1. Parse and validate input data
     const body = await request.json();
     const validationResult = generateFlashcardsSchema.safeParse(body);
@@ -36,7 +39,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
     const command = validationResult.data as GenerateFlashcardsCommand;
 
     // 2. Generate flashcards using service
-    const generationService = new GenerationService(locals.supabase, DEFAULT_USER_ID);
+    const generationService = new GenerationService(locals.supabase, locals.user.id);
     const result = await generationService.generateFlashcards(command);
 
     return new Response(JSON.stringify(result), {

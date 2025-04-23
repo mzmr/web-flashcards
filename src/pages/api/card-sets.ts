@@ -7,7 +7,6 @@ import type {
   ErrorResponse,
   ListCardSetsResponseDTO,
 } from "../../types";
-import { DEFAULT_USER_ID } from "../../db/supabase.client";
 
 export const prerender = false;
 
@@ -25,6 +24,10 @@ const listCardSetsQuerySchema = z.object({
 
 export const POST: APIRoute = async ({ request, locals }) => {
   try {
+    if (!locals.user) {
+      return new Response(JSON.stringify({ error: "Wymagane zalogowanie" }), { status: 401 });
+    }
+
     // Parsowanie body
     const body = await request.json();
 
@@ -47,7 +50,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
     // Utworzenie zestawu fiszek
     const cardSetService = new CardSetService(locals.supabase);
-    const cardSet = await cardSetService.createCardSet(DEFAULT_USER_ID, command);
+    const cardSet = await cardSetService.createCardSet(locals.user.id, command);
 
     // Zwrócenie odpowiedzi
     const response: CreateCardSetResponseDTO = cardSet;
@@ -88,6 +91,10 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
 export const GET: APIRoute = async ({ url, locals }) => {
   try {
+    if (!locals.user) {
+      return new Response(JSON.stringify({ error: "Wymagane zalogowanie" }), { status: 401 });
+    }
+
     // Parsowanie i walidacja parametrów zapytania
     const searchParams = Object.fromEntries(url.searchParams);
     const result = listCardSetsQuerySchema.safeParse(searchParams);
@@ -107,7 +114,7 @@ export const GET: APIRoute = async ({ url, locals }) => {
 
     // Pobranie zestawów fiszek
     const cardSetService = new CardSetService(locals.supabase);
-    const { cardSets, total } = await cardSetService.listCardSets(DEFAULT_USER_ID, page, limit, sort);
+    const { cardSets, total } = await cardSetService.listCardSets(locals.user.id, page, limit, sort);
 
     // Przygotowanie odpowiedzi
     const response: ListCardSetsResponseDTO = {

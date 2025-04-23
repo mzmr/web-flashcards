@@ -2,7 +2,6 @@ import { z } from "zod";
 import type { APIRoute } from "astro";
 import type { UpdateCardCommand, UpdateCardResponseDTO, ErrorResponse } from "@/types";
 import { CardsService, CardsServiceError } from "@/lib/services/cards.service";
-import { DEFAULT_USER_ID } from "@/db/supabase.client";
 
 // Schemat walidacji dla danych wejściowych
 const updateCardSchema = z.object({
@@ -10,16 +9,14 @@ const updateCardSchema = z.object({
   back: z.string().min(1).max(300),
 });
 
-// Schema walidacji parametrów URL
-const paramsSchema = z.object({
-  cardSetId: z.string().uuid(),
-  cardId: z.string().uuid(),
-});
-
 export const prerender = false;
 
 export const PUT: APIRoute = async ({ params, request, locals }) => {
   try {
+    if (!locals.user) {
+      return new Response(JSON.stringify({ error: "Wymagane zalogowanie" }), { status: 401 });
+    }
+
     // 1. Pobierz i zwaliduj parametry URL
     const { cardSetId, cardId } = params;
     if (!cardSetId || !cardId) {
@@ -27,6 +24,20 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
         JSON.stringify({
           error: "Brak wymaganych parametrów URL",
           code: "MISSING_PARAMS",
+        } satisfies ErrorResponse),
+        { status: 400 }
+      );
+    }
+
+    // Walidacja UUID
+    const cardSetIdResult = z.string().uuid().safeParse(cardSetId);
+    const cardIdResult = z.string().uuid().safeParse(cardId);
+
+    if (!cardSetIdResult.success || !cardIdResult.success) {
+      return new Response(
+        JSON.stringify({
+          error: "Nieprawidłowy format identyfikatorów",
+          code: "VALIDATION_ERROR",
         } satisfies ErrorResponse),
         { status: 400 }
       );
@@ -47,25 +58,13 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
       );
     }
 
-    // 3. Pobierz klienta Supabase z kontekstu
-    const supabase = locals.supabase;
-    if (!supabase) {
-      return new Response(
-        JSON.stringify({
-          error: "Błąd serwera - brak klienta bazy danych",
-          code: "DATABASE_ERROR",
-        } satisfies ErrorResponse),
-        { status: 500 }
-      );
-    }
-
-    // 4. Zaktualizuj kartę używając serwisu
-    const cardsService = new CardsService(supabase);
+    // 3. Zaktualizuj kartę używając serwisu
+    const cardsService = new CardsService(locals.supabase);
     const updatedCard = await cardsService.updateCard(
-      cardSetId,
-      cardId,
+      cardSetIdResult.data,
+      cardIdResult.data,
       validationResult.data as UpdateCardCommand,
-      DEFAULT_USER_ID
+      locals.user.id
     );
 
     return new Response(JSON.stringify(updatedCard satisfies UpdateCardResponseDTO), {
@@ -109,39 +108,26 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
 
 export const DELETE: APIRoute = async ({ params, locals }) => {
   try {
-    // 1. Walidacja parametrów URL
-    const paramsValidation = paramsSchema.safeParse(params);
-    if (!paramsValidation.success) {
+    if (!locals.user) {
+      return new Response(JSON.stringify({ error: "Wymagane zalogowanie" }), { status: 401 });
+    }
+
+    // Walidacja parametrów URL
+    const cardSetIdResult = z.string().uuid().safeParse(params.cardSetId);
+    const cardIdResult = z.string().uuid().safeParse(params.cardId);
+
+    if (!cardSetIdResult.success || !cardIdResult.success) {
       return new Response(
         JSON.stringify({
-          error: "Nieprawidłowe parametry",
+          error: "Nieprawidłowy format identyfikatorów",
           code: "VALIDATION_ERROR",
-          details: paramsValidation.error.issues,
         } satisfies ErrorResponse),
-        {
-          status: 400,
-          headers: { "Content-Type": "application/json" },
-        }
+        { status: 400 }
       );
     }
 
-    const { cardSetId, cardId } = paramsValidation.data;
-
-    // 2. Pobierz klienta Supabase z kontekstu
-    const supabase = locals.supabase;
-    if (!supabase) {
-      return new Response(
-        JSON.stringify({
-          error: "Błąd serwera - brak klienta bazy danych",
-          code: "DATABASE_ERROR",
-        } satisfies ErrorResponse),
-        { status: 500 }
-      );
-    }
-
-    // 3. Usuń kartę używając serwisu
-    const cardsService = new CardsService(supabase);
-    const deleteResult = await cardsService.deleteCard(cardSetId, cardId, DEFAULT_USER_ID);
+    const cardsService = new CardsService(locals.supabase);
+    const deleteResult = await cardsService.deleteCard(cardSetIdResult.data, cardIdResult.data, locals.user.id);
 
     return new Response(JSON.stringify(deleteResult), {
       status: 200,

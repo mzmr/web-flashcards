@@ -1,11 +1,7 @@
 import type { APIRoute } from "astro";
 import { z } from "zod";
-import type { ErrorResponse, DeleteCardSetResponseDTO } from "../../../types";
+import type { ErrorResponse } from "@/types";
 import { CardSetService, CardSetServiceError } from "../../../lib/services/card-set.service";
-import { DEFAULT_USER_ID } from "@/db/supabase.client";
-
-// Schemat walidacji dla UUID
-const uuidSchema = z.string().uuid();
 
 // Schemat walidacji dla body żądania PUT
 const updateCardSetSchema = z.object({
@@ -16,42 +12,37 @@ export const prerender = false;
 
 export const GET: APIRoute = async ({ params, locals }) => {
   try {
+    if (!locals.user) {
+      return new Response(JSON.stringify({ error: "Wymagane zalogowanie" }), { status: 401 });
+    }
+
     // Walidacja cardSetId
-    const result = uuidSchema.safeParse(params.cardSetId);
+    const result = z.string().uuid().safeParse(params.cardSetId);
     if (!result.success) {
       return new Response(
         JSON.stringify({
           error: "Nieprawidłowy format identyfikatora zestawu",
-          details: result.error.issues,
+          code: "VALIDATION_ERROR",
         } satisfies ErrorResponse),
-        {
-          status: 400,
-          headers: { "Content-Type": "application/json" },
-        }
+        { status: 400 }
       );
     }
 
-    const cardSetId = result.data;
     const cardSetService = new CardSetService(locals.supabase);
-
-    // Pobieranie szczegółów zestawu
-    const cardSetDetails = await cardSetService.getCardSetDetails(cardSetId);
+    const cardSetDetails = await cardSetService.getCardSetDetails(result.data);
 
     if (!cardSetDetails) {
       return new Response(
         JSON.stringify({
           error: "Nie znaleziono zestawu fiszek",
+          code: "NOT_FOUND",
         } satisfies ErrorResponse),
-        {
-          status: 404,
-          headers: { "Content-Type": "application/json" },
-        }
+        { status: 404 }
       );
     }
 
     return new Response(JSON.stringify(cardSetDetails), {
       status: 200,
-      headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
     console.error("Błąd podczas pobierania szczegółów zestawu:", error);
@@ -62,39 +53,35 @@ export const GET: APIRoute = async ({ params, locals }) => {
           error: error.message,
           code: error.code,
         } satisfies ErrorResponse),
-        {
-          status: 500,
-          headers: { "Content-Type": "application/json" },
-        }
+        { status: 500 }
       );
     }
 
     return new Response(
       JSON.stringify({
         error: "Wystąpił nieoczekiwany błąd podczas przetwarzania żądania",
+        code: "INTERNAL_SERVER_ERROR",
       } satisfies ErrorResponse),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      }
+      { status: 500 }
     );
   }
 };
 
 export const PUT: APIRoute = async ({ params, locals, request }) => {
   try {
+    if (!locals.user) {
+      return new Response(JSON.stringify({ error: "Wymagane zalogowanie" }), { status: 401 });
+    }
+
     // Walidacja cardSetId
-    const cardSetIdResult = uuidSchema.safeParse(params.cardSetId);
+    const cardSetIdResult = z.string().uuid().safeParse(params.cardSetId);
     if (!cardSetIdResult.success) {
       return new Response(
         JSON.stringify({
           error: "Nieprawidłowy format identyfikatora zestawu",
-          details: cardSetIdResult.error.issues,
+          code: "VALIDATION_ERROR",
         } satisfies ErrorResponse),
-        {
-          status: 400,
-          headers: { "Content-Type": "application/json" },
-        }
+        { status: 400 }
       );
     }
 
@@ -105,25 +92,22 @@ export const PUT: APIRoute = async ({ params, locals, request }) => {
       return new Response(
         JSON.stringify({
           error: "Nieprawidłowe dane wejściowe",
+          code: "VALIDATION_ERROR",
           details: bodyResult.error.issues,
         } satisfies ErrorResponse),
-        {
-          status: 400,
-          headers: { "Content-Type": "application/json" },
-        }
+        { status: 400 }
       );
     }
 
     const cardSetService = new CardSetService(locals.supabase);
     const updatedCardSet = await cardSetService.updateCardSet(
-      DEFAULT_USER_ID,
+      locals.user.id,
       cardSetIdResult.data,
       bodyResult.data.name
     );
 
     return new Response(JSON.stringify(updatedCardSet), {
       status: 200,
-      headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
     console.error("Błąd podczas aktualizacji zestawu:", error);
@@ -135,10 +119,7 @@ export const PUT: APIRoute = async ({ params, locals, request }) => {
             error: error.message,
             code: error.code,
           } satisfies ErrorResponse),
-          {
-            status: 404,
-            headers: { "Content-Type": "application/json" },
-          }
+          { status: 404 }
         );
       }
 
@@ -147,56 +128,42 @@ export const PUT: APIRoute = async ({ params, locals, request }) => {
           error: error.message,
           code: error.code,
         } satisfies ErrorResponse),
-        {
-          status: 500,
-          headers: { "Content-Type": "application/json" },
-        }
+        { status: 500 }
       );
     }
 
     return new Response(
       JSON.stringify({
         error: "Wystąpił nieoczekiwany błąd podczas przetwarzania żądania",
+        code: "INTERNAL_SERVER_ERROR",
       } satisfies ErrorResponse),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      }
+      { status: 500 }
     );
   }
 };
 
 export const DELETE: APIRoute = async ({ params, locals }) => {
   try {
+    if (!locals.user) {
+      return new Response(JSON.stringify({ error: "Wymagane zalogowanie" }), { status: 401 });
+    }
+
     // Walidacja cardSetId
-    const result = uuidSchema.safeParse(params.cardSetId);
+    const result = z.string().uuid().safeParse(params.cardSetId);
     if (!result.success) {
       return new Response(
         JSON.stringify({
           error: "Nieprawidłowy format identyfikatora zestawu",
-          details: result.error.issues,
+          code: "VALIDATION_ERROR",
         } satisfies ErrorResponse),
-        {
-          status: 400,
-          headers: { "Content-Type": "application/json" },
-        }
+        { status: 400 }
       );
     }
 
-    const cardSetId = result.data;
     const cardSetService = new CardSetService(locals.supabase);
+    await cardSetService.deleteCardSet(locals.user.id, result.data);
 
-    await cardSetService.deleteCardSet(DEFAULT_USER_ID, cardSetId);
-
-    return new Response(
-      JSON.stringify({
-        message: "Zestaw fiszek został pomyślnie usunięty",
-      } satisfies DeleteCardSetResponseDTO),
-      {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-      }
-    );
+    return new Response(null, { status: 204 });
   } catch (error) {
     console.error("Błąd podczas usuwania zestawu:", error);
 
@@ -207,10 +174,7 @@ export const DELETE: APIRoute = async ({ params, locals }) => {
             error: error.message,
             code: error.code,
           } satisfies ErrorResponse),
-          {
-            status: 404,
-            headers: { "Content-Type": "application/json" },
-          }
+          { status: 404 }
         );
       }
 
@@ -219,21 +183,16 @@ export const DELETE: APIRoute = async ({ params, locals }) => {
           error: error.message,
           code: error.code,
         } satisfies ErrorResponse),
-        {
-          status: 500,
-          headers: { "Content-Type": "application/json" },
-        }
+        { status: 500 }
       );
     }
 
     return new Response(
       JSON.stringify({
         error: "Wystąpił nieoczekiwany błąd podczas przetwarzania żądania",
+        code: "INTERNAL_SERVER_ERROR",
       } satisfies ErrorResponse),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      }
+      { status: 500 }
     );
   }
 };

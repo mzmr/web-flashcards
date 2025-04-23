@@ -61,9 +61,6 @@ export type CreateCardSetCommand = Pick<CardSetDTO, "name">;
 // Odpowiedzi API związane z Card Set
 export type CreateCardSetResponseDTO = CardSetDTO;
 export type UpdateCardSetResponseDTO = CardSetDTO;
-export interface DeleteCardSetResponseDTO {
-  message: string;
-}
 export interface ListCardSetsResponseDTO {
   cardSets: CardSetDTO[];
   pagination: Pagination;

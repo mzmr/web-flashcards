@@ -1,24 +1,7 @@
 import { defineMiddleware } from "astro:middleware";
 import { createSupabaseServerInstance } from "../db/supabase.server";
 
-// Public paths - Auth API endpoints & Server-Rendered Astro Pages
-const PUBLIC_PATHS = [
-  // Server-Rendered Astro Pages
-  "/auth/login",
-  "/auth/register",
-  "/auth/reset-password",
-  // Auth API endpoints
-  "/api/auth/login",
-  "/api/auth/register",
-  "/api/auth/reset-password",
-];
-
-export const onRequest = defineMiddleware(async ({ locals, cookies, url, request, redirect }, next) => {
-  // Skip auth check for public paths
-  if (PUBLIC_PATHS.includes(url.pathname)) {
-    return next();
-  }
-
+export const onRequest = defineMiddleware(async ({ locals, cookies, request }, next) => {
   const supabase = createSupabaseServerInstance({
     cookies,
     headers: request.headers,
@@ -29,16 +12,15 @@ export const onRequest = defineMiddleware(async ({ locals, cookies, url, request
     data: { user },
   } = await supabase.auth.getUser();
 
+  // Ustaw informacje o użytkowniku jeśli jest zalogowany
   if (user) {
     locals.user = {
       email: user.email ?? null,
       id: user.id,
     };
-  } else if (!PUBLIC_PATHS.includes(url.pathname)) {
-    // Redirect to login for protected routes
-    return redirect("/auth/login");
   }
 
+  // Zawsze dostępny supabase client w locals
   locals.supabase = supabase;
   return next();
 });

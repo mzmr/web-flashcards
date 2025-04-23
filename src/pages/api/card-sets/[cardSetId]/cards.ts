@@ -2,7 +2,6 @@ import { z } from "zod";
 import type { APIRoute } from "astro";
 import type { CreateCardsResponseDTO, ErrorResponse } from "@/types";
 import { CardsService } from "@/lib/services/cards.service";
-import { DEFAULT_USER_ID } from "@/db/supabase.client";
 
 // Schemat walidacji dla pojedynczej fiszki
 const cardCreateInputSchema = z.discriminatedUnion("source", [
@@ -41,10 +40,16 @@ const createCardsSchema = z.object({
 
 export const prerender = false;
 
-export const POST: APIRoute = async ({ request, params, locals }) => {
+export const POST: APIRoute = async ({ params, request, locals }) => {
   try {
+    if (!locals.user) {
+      return new Response(JSON.stringify({ error: "Wymagane zalogowanie" }), { status: 401 });
+    }
+
+    const { cardSetId } = params;
+    const body = await request.json();
+
     // 1. Pobierz i zwaliduj cardSetId
-    const cardSetId = params.cardSetId;
     if (!cardSetId) {
       return new Response(
         JSON.stringify({
@@ -54,20 +59,8 @@ export const POST: APIRoute = async ({ request, params, locals }) => {
       );
     }
 
-    // 2. Pobierz supabase z kontekstu
-    const supabase = locals.supabase;
-    if (!supabase) {
-      return new Response(
-        JSON.stringify({
-          error: "Błąd serwera",
-        } satisfies ErrorResponse),
-        { status: 500 }
-      );
-    }
-
-    // 3. Parsuj i waliduj dane wejściowe
-    const requestData = await request.json();
-    const validationResult = createCardsSchema.safeParse(requestData);
+    // 2. Parsuj i waliduj dane wejściowe
+    const validationResult = createCardsSchema.safeParse(body);
 
     if (!validationResult.success) {
       return new Response(
@@ -80,8 +73,8 @@ export const POST: APIRoute = async ({ request, params, locals }) => {
     }
 
     // 4. Utwórz serwis i dodaj fiszki
-    const cardsService = new CardsService(supabase);
-    const createdCards = await cardsService.createCards(cardSetId, validationResult.data.cards, DEFAULT_USER_ID);
+    const cardsService = new CardsService(locals.supabase);
+    const createdCards = await cardsService.createCards(cardSetId, validationResult.data.cards, locals.user.id);
 
     // 5. Zwróć odpowiedź
     return new Response(
