@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { v4 as uuidv4 } from "uuid";
-import type { CardSetDTO, CardDTO, LocalStorageState, UUID } from "@/types";
+import type { CardSetDTO, CardDTO, LocalStorageState, UUID, UpdateCardCommand } from "@/types";
 
 const LOCAL_STORAGE_KEY = "flashcards-state";
 
@@ -91,14 +91,14 @@ export const useLocalStorage = () => {
     return newCard;
   }, []);
 
-  const updateCard = useCallback((setId: UUID, cardId: UUID, front: string, back: string) => {
+  const updateCard = useCallback((setId: UUID, cardId: UUID, data: UpdateCardCommand) => {
     setState((prev) => ({
       cardSets: prev.cardSets.map((set) =>
         set.id === setId
           ? {
               ...set,
               cards: (set.cards || []).map((card) =>
-                card.id === cardId ? { ...card, front, back, updated_at: new Date().toISOString() } : card
+                card.id === cardId ? { ...card, ...data, updated_at: new Date().toISOString() } : card
               ),
               updated_at: new Date().toISOString(),
             }

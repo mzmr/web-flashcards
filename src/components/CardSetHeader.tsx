@@ -12,14 +12,17 @@ import {
 import { Input } from "@/components/ui/input";
 import type { CardSetDetailDTO } from "@/types";
 import { redirectTo } from "@/lib/api/helpers";
+import { SaveToCloudButton } from "./SaveToCloudButton";
 
 interface CardSetHeaderProps {
   cardSet: CardSetDetailDTO;
   onUpdateName: (name: string) => Promise<void>;
   onDelete: () => Promise<void>;
+  onSaveToCloud: () => Promise<void>;
+  isSaving?: boolean;
 }
 
-export function CardSetHeader({ cardSet, onUpdateName, onDelete }: CardSetHeaderProps) {
+export function CardSetHeader({ cardSet, onUpdateName, onDelete, onSaveToCloud, isSaving }: CardSetHeaderProps) {
   const [isEditingName, setIsEditingName] = useState(false);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const [newName, setNewName] = useState(cardSet.name);
@@ -66,6 +69,7 @@ export function CardSetHeader({ cardSet, onUpdateName, onDelete }: CardSetHeader
       </div>
 
       <div className="flex items-center gap-2">
+        <SaveToCloudButton cardSet={cardSet} onSave={onSaveToCloud} disabled={isSaving} />
         <Button variant="default" onClick={() => redirectTo(`/card-sets/${cardSet.id}/add-cards`)}>
           <Plus className="h-4 w-4 mr-2" />
           Dodaj fiszki

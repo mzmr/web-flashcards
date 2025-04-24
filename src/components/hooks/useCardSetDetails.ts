@@ -1,14 +1,15 @@
 import { useState, useEffect, useMemo } from "react";
-import type { CardSetDTO, UUID } from "@/types";
+import type { UUID, UpdateCardCommand, CardSetDetailDTO } from "@/types";
 import { useLocalStorage } from "./useLocalStorage";
 import { toast } from "sonner";
 import { redirectTo } from "@/lib/api/helpers";
 
 export function useCardSetDetails(id: UUID) {
-  const [cardSet, setCardSet] = useState<CardSetDTO | null>(null);
+  const [cardSet, setCardSet] = useState<CardSetDetailDTO | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
   const { getCardSet, updateCardSet, deleteCardSet, updateCard, deleteCard } = useLocalStorage();
 
   useEffect(() => {
@@ -18,7 +19,7 @@ export function useCardSetDetails(id: UUID) {
         const localSet = getCardSet(id);
 
         if (localSet) {
-          setCardSet(localSet);
+          setCardSet({ ...localSet, cards: localSet.cards || [] });
           return;
         }
 
@@ -27,10 +28,10 @@ export function useCardSetDetails(id: UUID) {
           throw new Error("Failed to fetch card set");
         }
         const data = await response.json();
-        setCardSet(data);
+        setCardSet({ ...data, cards: data.cards || [] });
       } catch (error) {
         if (error instanceof Error) {
-          setError(error);
+          setError(error.message);
           toast.error(error.message);
         }
       } finally {
@@ -90,18 +91,18 @@ export function useCardSetDetails(id: UUID) {
     }
   };
 
-  const handleUpdateCard = async (cardId: UUID, front: string, back: string) => {
+  const handleUpdateCard = async (cardId: UUID, data: UpdateCardCommand) => {
     if (!cardSet) return;
 
     try {
       if (cardSet.isLocal) {
-        updateCard(cardSet.id, cardId, front, back);
+        updateCard(cardSet.id, cardId, data);
         setCardSet((prev) =>
           prev
             ? {
                 ...prev,
-                cards: (prev.cards || []).map((card) =>
-                  card.id === cardId ? { ...card, front, back, updated_at: new Date().toISOString() } : card
+                cards: prev.cards.map((card) =>
+                  card.id === cardId ? { ...card, ...data, updated_at: new Date().toISOString() } : card
                 ),
               }
             : null
@@ -111,7 +112,7 @@ export function useCardSetDetails(id: UUID) {
         const response = await fetch(`/api/card-sets/${cardSet.id}/cards/${cardId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ front, back }),
+          body: JSON.stringify(data),
         });
 
         if (!response.ok) throw new Error();
@@ -121,7 +122,7 @@ export function useCardSetDetails(id: UUID) {
           prev
             ? {
                 ...prev,
-                cards: (prev.cards || []).map((card) => (card.id === cardId ? updatedCard : card)),
+                cards: prev.cards.map((card) => (card.id === cardId ? updatedCard : card)),
               }
             : null
         );
@@ -169,6 +170,57 @@ export function useCardSetDetails(id: UUID) {
     }
   };
 
+  const handleSaveToCloud = async () => {
+    if (!cardSet?.isLocal) return;
+
+    try {
+      setIsSaving(true);
+      // Najpierw tworzymy nowy zestaw
+      const createResponse = await fetch("/api/card-sets", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: cardSet.name }),
+      });
+
+      if (!createResponse.ok) throw new Error("Nie udało się utworzyć zestawu");
+
+      const newSet = await createResponse.json();
+
+      // Następnie dodajemy wszystkie karty
+      if (cardSet.cards.length > 0) {
+        const addCardsResponse = await fetch(`/api/card-sets/${newSet.id}/cards`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            cards: cardSet.cards.map(({ front, back, source, generation_id }) => ({
+              front,
+              back,
+              source,
+              ...(generation_id !== null ? { generation_id } : {}),
+            })),
+          }),
+        });
+
+        if (!addCardsResponse.ok) {
+          const errorData = await addCardsResponse.json();
+          throw new Error(errorData.error || "Nie udało się dodać kart");
+        }
+      }
+
+      // Usuwamy lokalny zestaw
+      deleteCardSet(cardSet.id);
+      toast.success("Zestaw został zapisany w chmurze");
+
+      // Przekierowujemy do nowego zestawu
+      redirectTo(`/card-sets/${newSet.id}`);
+    } catch (error) {
+      toast.error("Nie udało się zapisać zestawu w chmurze");
+      console.error("Błąd podczas zapisywania zestawu:", error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const filteredCards = useMemo(() => {
     if (!cardSet?.cards) return [];
     if (!searchTerm.trim()) return cardSet.cards;
@@ -185,10 +237,12 @@ export function useCardSetDetails(id: UUID) {
     cardSet,
     filteredCards,
     searchTerm,
+    isSaving,
     setSearchTerm,
     updateCardSetName: handleUpdateCardSetName,
     deleteCardSet: handleDeleteCardSet,
     updateCard: handleUpdateCard,
     deleteCard: handleDeleteCard,
+    saveToCloud: handleSaveToCloud,
   };
 }

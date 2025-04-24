@@ -23,6 +23,8 @@ export function CardSetDetailsPage({ cardSetId }: CardSetDetailsPageProps) {
     updateCard,
     deleteCard,
     setSearchTerm,
+    saveToCloud,
+    isSaving,
   } = useCardSetDetails(cardSetId);
 
   if (isLoading) {
@@ -48,7 +50,13 @@ export function CardSetDetailsPage({ cardSetId }: CardSetDetailsPageProps) {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl">
-      <CardSetHeader cardSet={cardSet} onUpdateName={updateCardSetName} onDelete={deleteCardSet} />
+      <CardSetHeader
+        cardSet={cardSet}
+        onUpdateName={updateCardSetName}
+        onDelete={deleteCardSet}
+        onSaveToCloud={saveToCloud}
+        isSaving={isSaving}
+      />
 
       <div className="mt-8">
         <CardSetSearchBar value={searchTerm} onChange={setSearchTerm} />
