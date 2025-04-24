@@ -7,17 +7,15 @@ import { NewCardSetModal } from "./NewCardSetModal";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useLocalStorage } from "@/components/hooks/useLocalStorage";
 
-export function CardSetsPage() {
-  const [cardSets, setCardSets] = useState<CardSetDTO[]>([]);
+export function CardSetsPage({ isAuthenticated }: { isAuthenticated?: boolean }) {
+  const [remoteCardSets, setRemoteCardSets] = useState<CardSetDTO[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0 });
-
-  useEffect(() => {
-    fetchCardSets();
-  }, [pagination.page]);
+  const { cardSets: localCardSets } = useLocalStorage();
 
   const fetchCardSets = async () => {
     try {
@@ -30,7 +28,7 @@ export function CardSetsPage() {
       }
 
       const data: ListCardSetsResponseDTO = await response.json();
-      setCardSets(data.cardSets);
+      setRemoteCardSets(data.cardSets);
       setPagination(data.pagination);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Wystąpił nieoczekiwany błąd");
@@ -39,8 +37,22 @@ export function CardSetsPage() {
     }
   };
 
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchCardSets();
+    } else {
+      setIsLoading(false);
+    }
+  }, [pagination.page, isAuthenticated]);
+
   const handleCardSetAdded = (newCardSet: CardSetDTO) => {
-    setCardSets((prev) => [newCardSet, ...prev]);
+    if (!isAuthenticated) {
+      // Lokalne zestawy są automatycznie aktualizowane przez hook useLocalStorage
+      setIsModalOpen(false);
+      return;
+    }
+
+    setRemoteCardSets((prev) => [newCardSet, ...prev]);
     setPagination((prev) => ({ ...prev, total: prev.total + 1 }));
     setIsModalOpen(false);
   };
@@ -89,16 +101,23 @@ export function CardSetsPage() {
     );
   }
 
+  // Łączymy i sortujemy zestawy
+  const allCardSets = [...remoteCardSets, ...localCardSets].sort(
+    (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+  );
+
+  const totalSets = isAuthenticated ? pagination.total + localCardSets.length : localCardSets.length;
+
   return (
     <div className="container mx-auto p-4 space-y-6">
       <div className="flex justify-between items-center">
-        <CardSetSummary total={pagination.total} />
+        <CardSetSummary total={totalSets} />
         <NewCardSetButton onClick={() => setIsModalOpen(true)} />
       </div>
 
-      <CardSetList cardSets={cardSets} />
+      <CardSetList cardSets={allCardSets} />
 
-      {totalPages > 1 && (
+      {isAuthenticated && totalPages > 1 && (
         <div className="flex justify-center items-center gap-4 mt-6">
           <Button variant="outline" size="icon" onClick={handlePreviousPage} disabled={pagination.page === 1}>
             <ChevronLeft className="h-4 w-4" />
@@ -112,7 +131,12 @@ export function CardSetsPage() {
         </div>
       )}
 
-      <NewCardSetModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onCardSetAdded={handleCardSetAdded} />
+      <NewCardSetModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onCardSetAdded={handleCardSetAdded}
+        isAuthenticated={isAuthenticated}
+      />
     </div>
   );
 }

@@ -3,6 +3,7 @@ import Layout from "@/layouts/Layout.astro";
 import { AddCardsPage } from "@/components/AddCardsPage";
 
 const { id } = Astro.params;
+const isAuthenticated = !!Astro.locals.user;
 
 if (!id) {
   return Astro.redirect("/card-sets");
@@ -10,5 +11,5 @@ if (!id) {
 ---
 
 <Layout title="Dodaj fiszki">
-  <AddCardsPage client:load cardSetId={id} />
+  <AddCardsPage client:load cardSetId={id} isAuthenticated={isAuthenticated} />
 </Layout>

@@ -1,8 +1,10 @@
 ---
 import Layout from "@/layouts/Layout.astro";
 import { CardSetsPage } from "@/components/CardSetsPage";
+
+const isAuthenticated = !!Astro.locals.user;
 ---
 
 <Layout title="Zestawy fiszek">
-  <CardSetsPage client:load />
+  <CardSetsPage client:load isAuthenticated={isAuthenticated} />
 </Layout>

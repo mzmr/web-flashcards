@@ -11,17 +11,20 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useLocalStorage } from "@/components/hooks/useLocalStorage";
 
 interface NewCardSetModalProps {
   isOpen: boolean;
   onClose: () => void;
   onCardSetAdded: (cardSet: CardSetDTO) => void;
+  isAuthenticated?: boolean;
 }
 
-export function NewCardSetModal({ isOpen, onClose, onCardSetAdded }: NewCardSetModalProps) {
+export function NewCardSetModal({ isOpen, onClose, onCardSetAdded, isAuthenticated }: NewCardSetModalProps) {
   const [name, setName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { createCardSet } = useLocalStorage();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,22 +43,30 @@ export function NewCardSetModal({ isOpen, onClose, onCardSetAdded }: NewCardSetM
       setIsLoading(true);
       setError(null);
 
-      const response = await fetch("/api/card-sets", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ name: name.trim() }),
-      });
+      let newCardSet: CardSetDTO;
 
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || "Nie udało się utworzyć zestawu");
+      if (isAuthenticated) {
+        const response = await fetch("/api/card-sets", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ name: name.trim() }),
+        });
+
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.error || "Nie udało się utworzyć zestawu");
+        }
+
+        newCardSet = await response.json();
+      } else {
+        newCardSet = createCardSet(name.trim());
       }
 
-      const newCardSet: CardSetDTO = await response.json();
       onCardSetAdded(newCardSet);
       setName("");
+      onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Wystąpił nieoczekiwany błąd");
     } finally {
@@ -70,7 +81,9 @@ export function NewCardSetModal({ isOpen, onClose, onCardSetAdded }: NewCardSetM
           <DialogHeader>
             <DialogTitle>Nowy zestaw fiszek</DialogTitle>
             <DialogDescription>
-              Wprowadź nazwę dla nowego zestawu fiszek. Później będziesz mógł dodać do niego fiszki.
+              {isAuthenticated
+                ? "Wprowadź nazwę dla nowego zestawu fiszek. Później będziesz mógł dodać do niego fiszki."
+                : "Wprowadź nazwę dla nowego lokalnego zestawu fiszek. Zestaw zostanie zapisany w pamięci przeglądarki."}
             </DialogDescription>
           </DialogHeader>
 

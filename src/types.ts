@@ -45,6 +45,8 @@ export interface CardSetDTO {
   name: string;
   created_at: Timestamp;
   updated_at: Timestamp;
+  isLocal?: boolean;
+  cards?: CardDTO[];
 }
 
 // Rozszerzony DTO dla szczegółów Card Set, zawierający listę fiszek
@@ -163,3 +165,8 @@ export type Generation = Database["public"]["Tables"]["generations"]["Row"];
 export type CardSet = Database["public"]["Tables"]["card_sets"]["Row"];
 export type GenerationError = Database["public"]["Tables"]["generation_errors"]["Insert"];
 export type Card = Database["public"]["Tables"]["cards"]["Row"];
+
+export interface LocalStorageState {
+  cardSets: CardSetDTO[];
+  lastUpdate: Timestamp;
+}

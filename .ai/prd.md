@@ -110,7 +110,7 @@ US-009
 Tytuł: Tworzenie zestawów fiszek w bazie danych
 Opis: Jako zalogowany użytkownik chcę mieć możliwość dodania zestawu fiszek, aby móc dodać do niego fiszki.
 Kryteria akceptacji:
-- Użytkownik może utworzyć zestaw fiszek z wybraną przez siebie nazwą o długości do 300 znaków.
+- Użytkownik może utworzyć zestaw fiszek z wybraną przez siebie nazwą o długości do 100 znaków.
 - Utworzony zestaw fiszek jest zapisany w bazie danych i przypisany do użytkownika, który go stworzył.
 - Zestaw fiszek utworzony przez zalogowanego użytkownika NIE może zostać zapisany w pamięci przeglądarki.
 
@@ -118,7 +118,7 @@ US-010
 Tytuł: Tworzenie zestawów fiszek po stronie klienta
 Opis: Jako niezalogowany użytkownik chcę mieć możliwość dodania zestawu fiszek, aby móc dodać do niego fiszki.
 Kryteria akceptacji:
-- Użytkownik może utworzyć zestaw fiszek z wybraną przez siebie nazwą o długości do 300 znaków.
+- Użytkownik może utworzyć zestaw fiszek z wybraną przez siebie nazwą o długości do 100 znaków.
 - Utworzony zestaw fiszek jest zapisany w lokalnej pamięci przeglądarki (local storage).
 - Zestaw fiszek utworzony przez niezalogowanego użytkownika NIE może zostać zapisany w bazie danych.
 
