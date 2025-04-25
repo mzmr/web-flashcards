@@ -21,6 +21,10 @@ This application utilizes spaced repetition techniques to enhance learning effic
 - **Frontend:** Astro 5, React 19, TypeScript 5, Tailwind CSS 4, Shadcn/ui
 - **Backend:** Supabase
 - **AI Integration:** Openrouter.ai for flashcard generation
+- **Testing:** 
+  - **Unit Tests:** Vitest, React Testing Library
+  - **E2E Tests:** Playwright
+  - **Accessibility & Performance:** axe-core, Lighthouse
 - **CI/CD & Hosting:** GitHub Actions & DigitalOcean
 - **Node.js Version:** 22.14.0 (as specified in .nvmrc)
 
