@@ -52,7 +52,7 @@ export function CardSetHeader({ cardSet, onUpdateName, onDelete, onSaveToCloud, 
   return (
     <div className="flex items-center justify-between">
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => redirectTo("/card-sets")}>
+        <Button variant="ghost" size="icon" onClick={() => redirectTo("/card-sets")} aria-label="Powrót">
           <ChevronLeft className="h-4 w-4" />
         </Button>
         <h1 className="text-2xl font-bold">{cardSet.name}</h1>
@@ -63,6 +63,7 @@ export function CardSetHeader({ cardSet, onUpdateName, onDelete, onSaveToCloud, 
             setNewName(cardSet.name);
             setIsEditingName(true);
           }}
+          aria-label="Edytuj nazwę"
         >
           <Pencil className="h-4 w-4" />
         </Button>
@@ -74,7 +75,7 @@ export function CardSetHeader({ cardSet, onUpdateName, onDelete, onSaveToCloud, 
           <Plus className="h-4 w-4 mr-2" />
           Dodaj fiszki
         </Button>
-        <Button variant="destructive" size="icon" onClick={() => setIsConfirmingDelete(true)}>
+        <Button variant="destructive" size="icon" onClick={() => setIsConfirmingDelete(true)} aria-label="Usuń zestaw">
           <Trash2 className="h-4 w-4" />
         </Button>
       </div>
@@ -91,14 +92,18 @@ export function CardSetHeader({ cardSet, onUpdateName, onDelete, onSaveToCloud, 
             onChange={(e) => setNewName(e.target.value)}
             placeholder="Nazwa zestawu"
             maxLength={100}
+            id="card-set-name"
+            aria-label="Nazwa zestawu"
           />
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditingName(false)} disabled={isSubmitting}>
+            <Button variant="outline" onClick={() => setIsEditingName(false)} aria-label="Anuluj edycję nazwy zestawu">
               Anuluj
             </Button>
             <Button
+              type="submit"
+              disabled={!newName || newName === cardSet.name || isSubmitting}
+              aria-label={isSubmitting ? "zapisywanie" : "zapisz zmiany"}
               onClick={handleUpdateName}
-              disabled={isSubmitting || newName.trim() === "" || newName.trim() === cardSet.name}
             >
               {isSubmitting ? "Zapisywanie..." : "Zapisz"}
             </Button>

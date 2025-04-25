@@ -11,7 +11,7 @@ interface CardSetItemProps {
 export function CardSetItem({ cardSet, href }: CardSetItemProps) {
   return (
     <a href={href} className="block">
-      <Card className="hover:bg-accent/50 transition-colors h-full">
+      <Card data-testid="card" className="hover:bg-accent/50 transition-colors h-full">
         <CardHeader>
           <div className="flex items-center gap-2">
             <CardTitle className="text-xl">{cardSet.name}</CardTitle>

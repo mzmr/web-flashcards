@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import type { CardSetDTO, ListCardSetsResponseDTO } from "@/types";
 import { CardSetSummary } from "./CardSetSummary";
 import { CardSetList } from "./CardSetList";
@@ -17,7 +17,7 @@ export function CardSetsPage({ isAuthenticated }: { isAuthenticated?: boolean })
   const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0 });
   const { cardSets: localCardSets } = useLocalStorage();
 
-  const fetchCardSets = async () => {
+  const fetchCardSets = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
@@ -35,7 +35,7 @@ export function CardSetsPage({ isAuthenticated }: { isAuthenticated?: boolean })
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [pagination.page, pagination.limit]);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -43,7 +43,7 @@ export function CardSetsPage({ isAuthenticated }: { isAuthenticated?: boolean })
     } else {
       setIsLoading(false);
     }
-  }, [pagination.page, isAuthenticated]);
+  }, [pagination.page, isAuthenticated, fetchCardSets]);
 
   const handleCardSetAdded = (newCardSet: CardSetDTO) => {
     if (!isAuthenticated) {
@@ -75,12 +75,12 @@ export function CardSetsPage({ isAuthenticated }: { isAuthenticated?: boolean })
     return (
       <div className="container mx-auto p-4 space-y-6">
         <div className="flex justify-between items-center">
-          <Skeleton className="h-8 w-48" />
-          <Skeleton className="h-10 w-32" />
+          <Skeleton className="h-8 w-48" data-testid="skeleton" />
+          <Skeleton className="h-10 w-32" data-testid="skeleton" />
         </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 6 }).map((_, i) => (
-            <Skeleton key={i} className="h-32" />
+            <Skeleton key={i} className="h-32" data-testid="skeleton" />
           ))}
         </div>
       </div>
@@ -119,13 +119,25 @@ export function CardSetsPage({ isAuthenticated }: { isAuthenticated?: boolean })
 
       {isAuthenticated && totalPages > 1 && (
         <div className="flex justify-center items-center gap-4 mt-6">
-          <Button variant="outline" size="icon" onClick={handlePreviousPage} disabled={pagination.page === 1}>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={handlePreviousPage}
+            disabled={pagination.page === 1}
+            aria-label="Poprzednia strona"
+          >
             <ChevronLeft className="h-4 w-4" />
           </Button>
           <span className="text-sm">
             Strona {pagination.page} z {totalPages}
           </span>
-          <Button variant="outline" size="icon" onClick={handleNextPage} disabled={pagination.page === totalPages}>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={handleNextPage}
+            disabled={pagination.page === totalPages}
+            aria-label="Następna strona"
+          >
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>

@@ -21,14 +21,26 @@ export const CardItem = memo(function CardItem({ card, onUpdate, onDelete }: Car
 
   return (
     <>
-      <Card>
+      <Card role="listitem">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <Badge variant={sourceBadgeVariants[card.source]}>{sourceLabels[card.source]}</Badge>
           <div className="flex gap-1">
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setIsEditing(true)}>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => setIsEditing(true)}
+              aria-label="edytuj kartę"
+            >
               <Pencil className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setIsConfirmingDelete(true)}>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => setIsConfirmingDelete(true)}
+              aria-label="usuń kartę"
+            >
               <Trash2 className="h-4 w-4" />
             </Button>
           </div>

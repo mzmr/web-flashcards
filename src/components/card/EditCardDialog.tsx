@@ -95,14 +95,20 @@ export function EditCardDialog({ card, isOpen, onOpenChange, onSave, mode = "edi
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={isSubmitting}
+            aria-label="Anuluj edycję"
+          >
             Anuluj
           </Button>
           <Button
             onClick={handleSave}
             disabled={isSubmitting || editData.front.trim() === "" || editData.back.trim() === "" || isUnchanged}
+            aria-label={mode === "edit" ? "Zapisz zmiany" : "Dodaj fiszkę"}
           >
-            {isSubmitting ? "Zapisywanie..." : mode === "edit" ? "Zapisz" : "Dodaj"}
+            {isSubmitting ? "Zapisywanie..." : mode === "edit" ? "Zapisz zmiany" : "Dodaj"}
           </Button>
         </DialogFooter>
       </DialogContent>

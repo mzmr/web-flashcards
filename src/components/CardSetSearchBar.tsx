@@ -9,20 +9,23 @@ interface CardSetSearchBarProps {
 
 export function CardSetSearchBar({ value, onChange }: CardSetSearchBarProps) {
   return (
-    <div className="relative max-w-md mx-auto">
-      <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+    <div className="relative">
+      <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
       <Input
+        placeholder="Szukaj fiszek..."
+        role="searchbox"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="pl-9 pr-9"
-        placeholder="Szukaj fiszek..."
+        className="pl-8 pr-8"
+        data-testid="card-search-input"
       />
       {value && (
         <Button
           variant="ghost"
-          size="icon"
-          className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2"
+          size="sm"
+          className="absolute right-0 top-0 h-full px-2 hover:bg-transparent"
           onClick={() => onChange("")}
+          data-testid="clear-search-button"
         >
           <X className="h-4 w-4" />
         </Button>

@@ -14,7 +14,14 @@ export function SaveToCloudButton({ cardSet, onSave, disabled }: SaveToCloudButt
   }
 
   return (
-    <Button variant="outline" size="sm" className="gap-2" onClick={onSave} disabled={disabled}>
+    <Button
+      variant="outline"
+      size="sm"
+      className="gap-2"
+      onClick={onSave}
+      disabled={disabled}
+      aria-label={disabled ? "zapisywanie" : "zapisz w chmurze"}
+    >
       <Cloud className="h-4 w-4" />
       Zapisz w chmurze
     </Button>

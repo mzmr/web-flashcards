@@ -16,7 +16,7 @@ export function CardSetList({ cardSets }: CardSetListProps) {
   }
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+    <div data-testid="card-set-grid" className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       {cardSets.map((cardSet) => (
         <CardSetItem key={cardSet.id} cardSet={cardSet} href={`/card-sets/${cardSet.id}`} />
       ))}

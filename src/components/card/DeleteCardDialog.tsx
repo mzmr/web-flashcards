@@ -36,10 +36,15 @@ export function DeleteCardDialog({ isOpen, onOpenChange, onDelete }: DeleteCardD
           <DialogDescription>Czy na pewno chcesz usunąć tę fiszkę? Tej operacji nie można cofnąć.</DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={isSubmitting}
+            aria-label="Anuluj usuwanie"
+          >
             Anuluj
           </Button>
-          <Button variant="destructive" onClick={handleDelete} disabled={isSubmitting}>
+          <Button variant="destructive" onClick={handleDelete} disabled={isSubmitting} aria-label="Potwierdź usunięcie">
             {isSubmitting ? "Usuwanie..." : "Usuń"}
           </Button>
         </DialogFooter>

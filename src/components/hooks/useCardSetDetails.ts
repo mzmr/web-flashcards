@@ -225,7 +225,7 @@ export function useCardSetDetails(id: UUID) {
     if (!cardSet?.cards) return [];
     if (!searchTerm.trim()) return cardSet.cards;
 
-    const term = searchTerm.toLowerCase();
+    const term = searchTerm.toLowerCase().trim();
     return cardSet.cards.filter(
       (card) => card.front.toLowerCase().includes(term) || card.back.toLowerCase().includes(term)
     );
