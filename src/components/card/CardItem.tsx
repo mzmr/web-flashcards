@@ -3,9 +3,9 @@ import { Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { EditCardDialog } from "./card/EditCardDialog";
-import { DeleteCardDialog } from "./card/DeleteCardDialog";
-import { FlashcardContent } from "./card/CardContent";
+import { EditCardDialog } from "./EditCardDialog";
+import { DeleteCardDialog } from "./DeleteCardDialog";
+import { FlashcardContent } from "./CardContent";
 import type { CardDTO, UpdateCardCommand } from "@/types";
 import { sourceLabels, sourceBadgeVariants } from "@/lib/constants";
 

@@ -5,9 +5,9 @@ import { memo } from "react";
 import type { TemporaryCard, UpdateCardCommand } from "@/types";
 import { AIGenerationForm } from "./AIGenerationForm";
 import { TemporaryCardList } from "./TemporaryCardList";
-import { EditCardDialog } from "./card/EditCardDialog";
-import { useCardSet } from "./hooks/useCardSet";
-import { useTemporaryCards } from "./hooks/useTemporaryCards";
+import { EditCardDialog } from "./EditCardDialog";
+import { useCardSet } from "@/components/hooks/useCardSet";
+import { useTemporaryCards } from "@/components/hooks/useTemporaryCards";
 
 interface AddCardsPageProps {
   cardSetId: string;

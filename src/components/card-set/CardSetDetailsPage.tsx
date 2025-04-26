@@ -2,9 +2,9 @@ import type { UUID } from "@/types";
 import { useCardSetDetails } from "@/components/hooks/useCardSetDetails";
 import { CardSetHeader } from "./CardSetHeader";
 import { CardSetSearchBar } from "./CardSetSearchBar";
-import { CardsList } from "./CardsList";
-import { Spinner } from "./ui/spinner";
-import { Alert, AlertDescription } from "./ui/alert";
+import { CardsList } from "@/components/card/CardsList";
+import { Spinner } from "@/components/ui/spinner";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 
 interface CardSetDetailsPageProps {

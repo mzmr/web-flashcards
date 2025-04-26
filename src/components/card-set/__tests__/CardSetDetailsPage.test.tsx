@@ -2,13 +2,13 @@ import { render, screen, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import userEvent from "@testing-library/user-event";
 import { CardSetDetailsPage } from "../CardSetDetailsPage";
-import { useCardSetDetails } from "../hooks/useCardSetDetails";
+import { useCardSetDetails } from "@/components/hooks/useCardSetDetails";
 import type { CardSetDetailDTO, CardSource } from "@/types";
 import { redirectTo } from "@/lib/api/helpers";
-import { type Card } from "../../types";
+import { type Card } from "@/types";
 
 // Mockowanie modułów
-vi.mock("../hooks/useCardSetDetails", () => ({
+vi.mock("@/components/hooks/useCardSetDetails", () => ({
   useCardSetDetails: vi.fn(),
 }));
 
@@ -16,7 +16,7 @@ vi.mock("@/lib/api/helpers", () => ({
   redirectTo: vi.fn(),
 }));
 
-vi.mock("../card/DeleteCardDialog", () => ({
+vi.mock("@/components/card/DeleteCardDialog", () => ({
   DeleteCardDialog: ({ isOpen, onDelete }: { isOpen: boolean; onDelete: () => void }) => {
     if (!isOpen) return null;
     return (
@@ -27,7 +27,7 @@ vi.mock("../card/DeleteCardDialog", () => ({
   },
 }));
 
-vi.mock("../card/EditCardDialog", () => ({
+vi.mock("@/components/card/EditCardDialog", () => ({
   EditCardDialog: ({ isOpen, onSave }: { isOpen: boolean; onSave: (card: Card) => void }) => {
     if (!isOpen) return null;
     return (
