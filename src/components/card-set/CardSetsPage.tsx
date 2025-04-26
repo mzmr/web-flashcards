@@ -1,49 +1,40 @@
-import { useState, useEffect, useCallback } from "react";
-import type { CardSetDTO, ListCardSetsResponseDTO } from "@/types";
+import { useState, useEffect } from "react";
+import type { CardSetDTO } from "@/types";
 import { CardSetSummary } from "./CardSetSummary";
 import { CardSetList } from "./CardSetList";
 import { NewCardSetButton } from "./NewCardSetButton";
 import { NewCardSetModal } from "./NewCardSetModal";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { CardSetsPagination } from "./CardSetsPagination";
+import { useCardSetsApi } from "@/components/hooks/useCardSetsApi";
+import { useCardSetsPagination } from "@/components/hooks/useCardSetsPagination";
 import { useLocalStorage } from "@/components/hooks/useLocalStorage";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function CardSetsPage({ isAuthenticated }: { isAuthenticated?: boolean }) {
   const [remoteCardSets, setRemoteCardSets] = useState<CardSetDTO[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0 });
+  const [isInitialized, setIsInitialized] = useState(false);
   const { cardSets: localCardSets } = useLocalStorage();
+  const { isLoading, error, fetchCardSets } = useCardSetsApi();
+  const { pagination, totalPages, handlePreviousPage, handleNextPage, setTotal } = useCardSetsPagination(10);
 
-  const fetchCardSets = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      const response = await fetch(`/api/card-sets?page=${pagination.page}&limit=${pagination.limit}&sort=updated_at`);
-
-      if (!response.ok) {
-        throw new Error("Nie udało się pobrać zestawów fiszek");
-      }
-
-      const data: ListCardSetsResponseDTO = await response.json();
-      setRemoteCardSets(data.cardSets);
-      setPagination(data.pagination);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Wystąpił nieoczekiwany błąd");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [pagination.page, pagination.limit]);
+  // Inicjalizacja stanu po załadowaniu komponentu na kliencie
+  useEffect(() => {
+    setIsInitialized(true);
+  }, []);
 
   useEffect(() => {
     if (isAuthenticated) {
-      fetchCardSets();
-    } else {
-      setIsLoading(false);
+      fetchCardSets(pagination.page, pagination.limit)
+        .then((data) => {
+          setRemoteCardSets(data.cardSets);
+          setTotal(data.pagination.total);
+        })
+        .catch(() => {
+          // Error jest już obsługiwany w hooku useCardSetsApi
+        });
     }
-  }, [pagination.page, isAuthenticated, fetchCardSets]);
+  }, [isAuthenticated, pagination.page, pagination.limit, fetchCardSets, setTotal]);
 
   const handleCardSetAdded = (newCardSet: CardSetDTO) => {
     if (!isAuthenticated) {
@@ -51,26 +42,26 @@ export function CardSetsPage({ isAuthenticated }: { isAuthenticated?: boolean })
     }
 
     setRemoteCardSets((prev) => [newCardSet, ...prev]);
-    setPagination((prev) => ({ ...prev, total: prev.total + 1 }));
+    setTotal(pagination.total + 1);
   };
 
-  const totalPages = Math.ceil(pagination.total / pagination.limit);
+  // Łączymy i sortujemy zestawy tylko po inicjalizacji na kliencie
+  const allCardSets = isInitialized
+    ? [...remoteCardSets, ...localCardSets].sort(
+        (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+      )
+    : [];
 
-  const handlePreviousPage = () => {
-    if (pagination.page > 1) {
-      setPagination((prev) => ({ ...prev, page: prev.page - 1 }));
-    }
-  };
+  const totalSets = isInitialized
+    ? isAuthenticated
+      ? pagination.total + localCardSets.length
+      : localCardSets.length
+    : 0;
 
-  const handleNextPage = () => {
-    if (pagination.page < totalPages) {
-      setPagination((prev) => ({ ...prev, page: prev.page + 1 }));
-    }
-  };
-
-  if (isLoading) {
+  if (!isInitialized || isLoading) {
     return (
-      <div className="container mx-auto p-4 space-y-6">
+      <main className="container mx-auto p-4 space-y-6">
+        <h1 className="sr-only">Zestawy fiszek</h1>
         <div className="flex justify-between items-center">
           <Skeleton className="h-8 w-48" data-testid="skeleton" />
           <Skeleton className="h-10 w-32" data-testid="skeleton" />
@@ -80,33 +71,28 @@ export function CardSetsPage({ isAuthenticated }: { isAuthenticated?: boolean })
             <Skeleton key={i} className="h-32" data-testid="skeleton" />
           ))}
         </div>
-      </div>
+      </main>
     );
   }
 
   if (error) {
     return (
-      <div className="p-4 text-center">
+      <main className="p-4 text-center">
+        <h1 className="sr-only">Zestawy fiszek</h1>
         <p className="text-red-500 mb-4">{error}</p>
         <button
-          onClick={fetchCardSets}
+          onClick={() => fetchCardSets(1, pagination.limit)}
           className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
         >
           Spróbuj ponownie
         </button>
-      </div>
+      </main>
     );
   }
 
-  // Łączymy i sortujemy zestawy
-  const allCardSets = [...remoteCardSets, ...localCardSets].sort(
-    (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
-  );
-
-  const totalSets = isAuthenticated ? pagination.total + localCardSets.length : localCardSets.length;
-
   return (
-    <div className="container mx-auto p-4 space-y-6">
+    <main className="container mx-auto p-4 space-y-6">
+      <h1 className="sr-only">Zestawy fiszek</h1>
       <div className="flex justify-between items-center">
         <CardSetSummary total={totalSets} />
         <NewCardSetButton onClick={() => setIsModalOpen(true)} />
@@ -115,29 +101,12 @@ export function CardSetsPage({ isAuthenticated }: { isAuthenticated?: boolean })
       <CardSetList cardSets={allCardSets} />
 
       {isAuthenticated && totalPages > 1 && (
-        <div className="flex justify-center items-center gap-4 mt-6">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={handlePreviousPage}
-            disabled={pagination.page === 1}
-            aria-label="Poprzednia strona"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <span className="text-sm">
-            Strona {pagination.page} z {totalPages}
-          </span>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={handleNextPage}
-            disabled={pagination.page === totalPages}
-            aria-label="Następna strona"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
+        <CardSetsPagination
+          currentPage={pagination.page}
+          totalPages={totalPages}
+          onPreviousPage={handlePreviousPage}
+          onNextPage={handleNextPage}
+        />
       )}
 
       <NewCardSetModal
@@ -146,6 +115,6 @@ export function CardSetsPage({ isAuthenticated }: { isAuthenticated?: boolean })
         onCardSetAdded={handleCardSetAdded}
         isAuthenticated={isAuthenticated}
       />
-    </div>
+    </main>
   );
 }

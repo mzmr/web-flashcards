@@ -1,3 +1,4 @@
+import { memo } from "react";
 import type { CardSetDTO } from "@/types";
 import { CardSetItem } from "./CardSetItem";
 
@@ -5,7 +6,7 @@ interface CardSetListProps {
   cardSets: CardSetDTO[];
 }
 
-export function CardSetList({ cardSets }: CardSetListProps) {
+function CardSetListComponent({ cardSets }: CardSetListProps) {
   if (cardSets.length === 0) {
     return (
       <div data-testid="card-set-grid" className="text-center py-8 text-muted-foreground">
@@ -23,3 +24,8 @@ export function CardSetList({ cardSets }: CardSetListProps) {
     </div>
   );
 }
+
+export const CardSetList = memo(CardSetListComponent);
+
+// Dodajemy displayName dla lepszego debugowania
+CardSetList.displayName = "CardSetList";

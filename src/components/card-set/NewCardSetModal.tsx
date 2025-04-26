@@ -82,7 +82,7 @@ export function NewCardSetModal({ isOpen, onClose, onCardSetAdded, isAuthenticat
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()} data-testid="new-card-set-modal">
       <DialogContent>
         <form onSubmit={handleSubmit}>
           <DialogHeader>
