@@ -47,14 +47,11 @@ export function CardSetsPage({ isAuthenticated }: { isAuthenticated?: boolean })
 
   const handleCardSetAdded = (newCardSet: CardSetDTO) => {
     if (!isAuthenticated) {
-      // Lokalne zestawy są automatycznie aktualizowane przez hook useLocalStorage
-      setIsModalOpen(false);
       return;
     }
 
     setRemoteCardSets((prev) => [newCardSet, ...prev]);
     setPagination((prev) => ({ ...prev, total: prev.total + 1 }));
-    setIsModalOpen(false);
   };
 
   const totalPages = Math.ceil(pagination.total / pagination.limit);

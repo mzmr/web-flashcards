@@ -30,23 +30,51 @@ export const useLocalStorage = () => {
     }
   }, [state]);
 
-  const createCardSet = useCallback((name: string): CardSetDTO => {
-    const newSet: CardSetDTO = {
-      id: uuidv4() as UUID,
-      name,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      isLocal: true,
-      cards: [],
+  useEffect(() => {
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === LOCAL_STORAGE_KEY) {
+        const newValue = event.newValue
+          ? JSON.parse(event.newValue)
+          : { cardSets: [], lastUpdate: new Date().toISOString() };
+        setState(newValue);
+      }
     };
 
-    setState((prev) => ({
-      cardSets: [...prev.cardSets, newSet],
-      lastUpdate: new Date().toISOString(),
-    }));
-
-    return newSet;
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
   }, []);
+
+  const createCardSet = useCallback(
+    (name: string): CardSetDTO => {
+      const newSet: CardSetDTO = {
+        id: uuidv4() as UUID,
+        name,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        isLocal: true,
+        cards: [],
+      };
+
+      setState((prev) => ({
+        cardSets: [newSet, ...prev.cardSets],
+        lastUpdate: new Date().toISOString(),
+      }));
+
+      // Wyzwalamy zdarzenie storage dla innych instancji hooka
+      window.dispatchEvent(
+        new StorageEvent("storage", {
+          key: LOCAL_STORAGE_KEY,
+          newValue: JSON.stringify({
+            cardSets: [newSet, ...state.cardSets],
+            lastUpdate: new Date().toISOString(),
+          }),
+        })
+      );
+
+      return newSet;
+    },
+    [state.cardSets]
+  );
 
   const updateCardSet = useCallback((id: UUID, name: string) => {
     setState((prev) => ({

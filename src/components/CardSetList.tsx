@@ -8,7 +8,7 @@ interface CardSetListProps {
 export function CardSetList({ cardSets }: CardSetListProps) {
   if (cardSets.length === 0) {
     return (
-      <div className="text-center py-8 text-muted-foreground">
+      <div data-testid="card-set-grid" className="text-center py-8 text-muted-foreground">
         <p>Nie masz jeszcze żadnych zestawów fiszek.</p>
         <p>Kliknij przycisk &quot;Nowy zestaw&quot; aby utworzyć pierwszy zestaw.</p>
       </div>

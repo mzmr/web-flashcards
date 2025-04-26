@@ -26,16 +26,22 @@ export function NewCardSetModal({ isOpen, onClose, onCardSetAdded, isAuthenticat
   const [error, setError] = useState<string | null>(null);
   const { createCardSet } = useLocalStorage();
 
+  const validateName = (name: string): string | null => {
+    if (!name.trim()) {
+      return "Nazwa zestawu jest wymagana";
+    }
+    if (name.length > 100) {
+      return "Nazwa zestawu nie może być dłuższa niż 100 znaków";
+    }
+    return null;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!name.trim()) {
-      setError("Nazwa zestawu jest wymagana");
-      return;
-    }
-
-    if (name.length > 100) {
-      setError("Nazwa zestawu nie może być dłuższa niż 100 znaków");
+    const validationError = validateName(name);
+    if (validationError) {
+      setError(validationError);
       return;
     }
 
@@ -66,6 +72,7 @@ export function NewCardSetModal({ isOpen, onClose, onCardSetAdded, isAuthenticat
 
       onCardSetAdded(newCardSet);
       setName("");
+      setError(null);
       onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Wystąpił nieoczekiwany błąd");
@@ -94,19 +101,27 @@ export function NewCardSetModal({ isOpen, onClose, onCardSetAdded, isAuthenticat
             <Input
               id="name"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => {
+                setName(e.target.value);
+                setError(null);
+              }}
               placeholder="Wprowadź nazwę zestawu..."
               className="mt-2"
               disabled={isLoading}
+              data-testid="card-set-name-input"
             />
-            {error && <p className="text-sm text-destructive mt-2">{error}</p>}
+            {error && (
+              <p className="text-sm text-destructive mt-2" data-testid="error-message">
+                {error}
+              </p>
+            )}
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>
+            <Button type="button" variant="outline" onClick={onClose} disabled={isLoading} data-testid="cancel-button">
               Anuluj
             </Button>
-            <Button type="submit" disabled={isLoading}>
+            <Button type="submit" disabled={isLoading} data-testid="create-card-set-button">
               {isLoading ? "Tworzenie..." : "Utwórz zestaw"}
             </Button>
           </DialogFooter>
