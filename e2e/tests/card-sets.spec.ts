@@ -57,6 +57,7 @@ test.describe("Zarządzanie zestawami fiszek", () => {
   test("powinien anulować tworzenie zestawu", async () => {
     // Arrange
     const nazwa = "Zestaw do anulowania";
+    await cardSetsPage.waitForAnimations();
     const poczatkowaLiczbaZestawow = (await cardSetsPage.getAllCardSets()).length;
 
     // Act
@@ -67,8 +68,19 @@ test.describe("Zarządzanie zestawami fiszek", () => {
     // Assert
     await expect(cardSetsPage.modal.dialog).not.toBeVisible();
     await cardSetsPage.waitForAnimations();
-    const aktualnaLiczbaZestawow = (await cardSetsPage.getAllCardSets()).length;
-    expect(aktualnaLiczbaZestawow).toBe(poczatkowaLiczbaZestawow);
+
+    // Sprawdzamy, czy zestaw o tej nazwie nie został dodany
+    const zestawy = await cardSetsPage.getAllCardSets();
+
+    // Pobieramy teksty wszystkich zestawów
+    const tekstyZestawow = await Promise.all(zestawy.map((zestaw) => zestaw.textContent()));
+
+    // Sprawdzamy, czy którykolwiek z zestawów zawiera szukaną nazwę
+    const zestawIstnieje = tekstyZestawow.some((tekst) => tekst?.includes(nazwa));
+    expect(zestawIstnieje).toBe(false);
+
+    // Dodatkowo sprawdzamy, czy liczba zestawów się nie zmieniła
+    expect(zestawy.length).toBe(poczatkowaLiczbaZestawow);
   });
 
   test("powinien zachować dane w formularzu po błędzie walidacji", async () => {

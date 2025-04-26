@@ -28,6 +28,13 @@ export default defineConfig({
       name: "setup",
       testMatch: /.*\.setup\.ts/,
       use: { ...devices["Desktop Chrome"] },
+      teardown: "cleanup-db",
+    },
+
+    // Projekt do czyszczenia bazy danych
+    {
+      name: "cleanup-db",
+      testMatch: /.*\.teardown\.ts/,
     },
 
     {
