@@ -79,7 +79,7 @@ describe("CardSetItem", () => {
     renderCardSetItem();
 
     // Act
-    const card = screen.getByTestId("card");
+    const card = screen.getByTestId(`card-set-${mockCardSet.id}`);
 
     // Assert
     expect(card).toHaveClass("hover:bg-accent/50", "transition-colors", "h-full");
