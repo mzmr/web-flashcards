@@ -49,6 +49,7 @@ This application utilizes spaced repetition techniques to enhance learning effic
 
 ## Available Scripts
 - `npm run dev` - Starts the development server.
+- `npm run dev:e2e` - Starts the development server connected to the E2E database.
 - `npm run build` - Builds the project for production.
 - `npm run preview` - Previews the production build locally.
 - `npm run astro` - Runs Astro CLI commands.
