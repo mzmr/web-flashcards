@@ -89,14 +89,6 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 5
-          
-      - name: Upload E2E test coverage
-        if: success()
-        uses: actions/upload-artifact@v4
-        with:
-          name: e2e-test-coverage
-          path: coverage/
-          retention-days: 5
 
   status-comment:
     name: Add Status Comment
@@ -114,11 +106,11 @@ jobs:
           path: unit-coverage
         continue-on-error: true
 
-      - name: Download E2E test coverage
+      - name: Download Playwright report
         uses: actions/download-artifact@v4
         with:
-          name: e2e-test-coverage
-          path: e2e-coverage
+          name: playwright-report
+          path: playwright-report
         continue-on-error: true
 
       - name: Create status comment
@@ -128,11 +120,11 @@ jobs:
           script: |
             const fs = require('fs');
             let unitCoverageExists = false;
-            let e2eCoverageExists = false;
+            let e2eReportExists = false;
             
             try {
               unitCoverageExists = fs.existsSync('./unit-coverage/index.html');
-              e2eCoverageExists = fs.existsSync('./e2e-coverage/index.html');
+              e2eReportExists = fs.existsSync('./playwright-report/index.html');
             } catch (error) {
               console.log('Error checking coverage files:', error);
             }
@@ -158,7 +150,7 @@ jobs:
             - ${e2eTestsStatus}: Testy E2E
             
             ${unitCoverageExists ? '📊 Dostępny raport pokrycia testów jednostkowych' : ''}
-            ${e2eCoverageExists ? '📊 Dostępny raport pokrycia testów E2E' : ''}
+            ${e2eReportExists ? '📊 Dostępny raport testów E2E' : ''}
             `;
             
             github.rest.issues.createComment({
