@@ -8,6 +8,7 @@ import { TemporaryCardList } from "./TemporaryCardList";
 import { EditCardDialog } from "./EditCardDialog";
 import { useCardSet } from "@/components/hooks/useCardSet";
 import { useTemporaryCards } from "@/components/hooks/useTemporaryCards";
+import { isFeatureEnabled } from "@/features/featureFlags";
 
 interface AddCardsPageProps {
   cardSetId: string;
@@ -61,6 +62,8 @@ export function AddCardsPage({ cardSetId, isAuthenticated }: AddCardsPageProps) 
     setEditingCard,
   } = useTemporaryCards(cardSetId);
 
+  const isAIGenerationEnabled = isFeatureEnabled("ai_generation");
+
   const handleBack = () => {
     redirectTo(`/card-sets/${cardSetId}`);
   };
@@ -78,7 +81,7 @@ export function AddCardsPage({ cardSetId, isAuthenticated }: AddCardsPageProps) 
       <Header name={cardSet.name} onBack={handleBack} />
 
       <div className="grid gap-6">
-        {isAuthenticated && !cardSet.isLocal && <AIGenerationForm onGenerate={addCards} />}
+        {isAuthenticated && !cardSet.isLocal && isAIGenerationEnabled && <AIGenerationForm onGenerate={addCards} />}
 
         <Actions
           onManualAdd={addManualCard}
