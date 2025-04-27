@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { OpenRouterError, OpenRouterAPIError, OpenRouterValidationError } from "./openrouter.types";
 import type { ModelParams, ConfigOptions, RequestPayload, Response, RetryConfig } from "./openrouter.types";
+import { OPENROUTER_API_KEY, OPENROUTER_API_URL } from "astro:env/server";
 
 export class OpenRouterService {
   // Pola publiczne
@@ -23,8 +24,8 @@ export class OpenRouterService {
 
   constructor(responseSchema: z.ZodType) {
     // Inicjalizacja z zmiennych środowiskowych
-    this.apiUrl = import.meta.env.OPENROUTER_API_URL || "https://openrouter.ai/api/v1/chat/completions";
-    this.apiKey = import.meta.env.OPENROUTER_API_KEY;
+    this.apiUrl = OPENROUTER_API_URL || "https://openrouter.ai/api/v1/chat/completions";
+    this.apiKey = OPENROUTER_API_KEY;
 
     if (!this.apiKey) {
       throw new OpenRouterError("OPENROUTER_API_KEY is required but not provided in environment variables");
