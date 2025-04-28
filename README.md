@@ -49,12 +49,19 @@ This application utilizes spaced repetition techniques to enhance learning effic
 
 ## Available Scripts
 - `npm run dev` - Starts the development server.
+- `npm run dev:e2e` - Starts the development server connected to the E2E database.
 - `npm run build` - Builds the project for production.
 - `npm run preview` - Previews the production build locally.
 - `npm run astro` - Runs Astro CLI commands.
 - `npm run lint` - Runs ESLint to check for code issues.
 - `npm run lint:fix` - Automatically fixes lint issues.
 - `npm run format` - Formats the codebase using Prettier.
+- `npm run test` - Runs Vitest and executes unit tests.
+- `npm run test:watch` - Runs Vitest in watch mode.
+- `npm run test:ui` - Launches the test UI.
+- `npm run test:coverage` - Generates the test coverage report.
+- `npm run test:e2e` - Runs end-to-end tests using Playwright.
+- `npm run test:e2e:ui` - Launches the end-to-end test UI.
 
 ## Project Scope
 The project is centered around the following key features:
