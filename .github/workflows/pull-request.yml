@@ -7,7 +7,14 @@ on:
 
 jobs:
   lint:
-    uses: ./.github/workflows/lint.yml
+    name: Lint Code
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Node.js Environment
+        uses: ./.github/actions/setup-node-env
+
+      - name: Run linters
+        run: npm run lint
 
   unit-tests:
     name: Unit Tests
