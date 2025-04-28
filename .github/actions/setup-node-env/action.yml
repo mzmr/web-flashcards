@@ -1,12 +1,8 @@
 name: 'Setup Node.js Environment'
-description: 'Checks out code, sets up Node.js using .nvmrc, caches npm, and installs dependencies'
+description: 'Sets up Node.js using .nvmrc, caches npm, and installs dependencies. Assumes code is already checked out.'
 runs:
   using: "composite"
   steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      shell: bash
-
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
