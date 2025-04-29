@@ -1,10 +1,28 @@
+/**
+ * @module GenerationService
+ * @description Moduł odpowiedzialny za generowanie fiszek edukacyjnych przy użyciu API OpenRouter.
+ * Zawiera logikę walidacji, przetwarzania odpowiedzi oraz obsługi błędów.
+ */
+
 import { z } from "zod";
 import type { SupabaseClient } from "../../db/supabase.client";
 import type { GenerateFlashcardsCommand, GenerateFlashcardsResponseDTO, Generation } from "../../types";
 import { OpenRouterService } from "./openrouter.service";
 import { OpenRouterError } from "./openrouter.types";
 
+/**
+ * Niestandardowa klasa błędu dla obsługi problemów związanych z generowaniem fiszek.
+ * @class
+ * @extends Error
+ */
 export class GenerationServiceError extends Error {
+  /**
+   * Tworzy nową instancję błędu generacji.
+   * @param {string} message - Komunikat błędu
+   * @param {string} code - Kod błędu (jeden z ERROR_CODES)
+   * @param {string} [inputText] - Tekst wejściowy, który spowodował błąd
+   * @param {Error} [cause] - Pierwotna przyczyna błędu (błąd, który został złapany)
+   */
   constructor(
     message: string,
     public readonly code: string,
@@ -16,16 +34,29 @@ export class GenerationServiceError extends Error {
   }
 }
 
-// Mapowanie kodów błędów
+/**
+ * Stałe kody błędów używane w aplikacji.
+ * @readonly
+ * @enum {string}
+ */
 const ERROR_CODES = {
+  /** Ogólny błąd generacji fiszek */
   GENERATION_FAILED: "GENERATION_FAILED",
+  /** Błąd walidacji danych wejściowych lub wyjściowych */
   VALIDATION_FAILED: "VALIDATION_FAILED",
+  /** Błąd zapisu generacji do bazy danych */
   SAVE_GENERATION_FAILED: "SAVE_GENERATION_FAILED",
+  /** Błąd API OpenRouter */
   API_ERROR: "API_ERROR",
+  /** Przekroczony limit zapytań do API */
   RATE_LIMIT_EXCEEDED: "RATE_LIMIT_EXCEEDED",
 } as const;
 
-// Schema dla odpowiedzi z OpenRouter dla fiszek
+/**
+ * Schema Zod do walidacji odpowiedzi z API OpenRouter.
+ * Definiuje oczekiwaną strukturę danych zwracanych przez API.
+ * @private
+ */
 const flashcardsResponseSchema = z.object({
   choices: z.array(
     z.object({
@@ -48,14 +79,29 @@ const flashcardsResponseSchema = z.object({
     .optional(),
 });
 
+/**
+ * Typ reprezentujący zwalidowaną odpowiedź z API OpenRouter.
+ */
 type FlashcardsResponse = z.infer<typeof flashcardsResponseSchema>;
 
 /**
- * Service for handling flashcard generation
+ * Serwis odpowiedzialny za generowanie fiszek edukacyjnych.
+ * Wykorzystuje API OpenRouter do tworzenia fiszek na podstawie tekstu wejściowego
+ * oraz zapisuje wyniki generacji w bazie danych.
+ * @class
  */
 export class GenerationService {
+  /**
+   * Instancja serwisu OpenRouter do komunikacji z API.
+   * @private
+   */
   private openRouter: OpenRouterService;
 
+  /**
+   * Tworzy nową instancję serwisu generacji fiszek.
+   * @param {SupabaseClient} supabase - Klient Supabase do komunikacji z bazą danych
+   * @param {string} userId - Identyfikator użytkownika, dla którego generowane są fiszki
+   */
   constructor(
     private readonly supabase: SupabaseClient,
     private readonly userId: string
@@ -96,8 +142,21 @@ export class GenerationService {
   }
 
   /**
-   * Generates flashcards based on input text using OpenRouter API
-   * @throws {GenerationServiceError} When generation fails or cannot be saved to database
+   * Generuje fiszki na podstawie tekstu wejściowego przy użyciu API OpenRouter.
+   * Zapisuje wyniki generacji w bazie danych i zwraca wygenerowane fiszki.
+   *
+   * @param {GenerateFlashcardsCommand} command - Obiekt zawierający tekst wejściowy do generacji fiszek
+   * @returns {Promise<GenerateFlashcardsResponseDTO>} Obiekt zawierający wygenerowane fiszki i metadane
+   * @throws {GenerationServiceError} Gdy generacja się nie powiedzie lub wystąpi błąd podczas zapisu do bazy danych
+   *
+   * @example
+   * ```typescript
+   * const result = await generationService.generateFlashcards({
+   *   input_text: "Historia II wojny światowej"
+   * });
+   *
+   * console.log(`Wygenerowano ${result.cards.length} fiszek`);
+   * ```
    */
   async generateFlashcards(command: GenerateFlashcardsCommand): Promise<GenerateFlashcardsResponseDTO> {
     const startTime = Date.now();
@@ -161,8 +220,15 @@ export class GenerationService {
   }
 
   /**
-   * Saves generation data to database
-   * @throws {GenerationServiceError} When generation cannot be saved
+   * Zapisuje dane generacji fiszek do bazy danych.
+   *
+   * @private
+   * @param {Object} params - Parametry generacji do zapisania
+   * @param {string} params.input_text - Tekst wejściowy użyty do generacji fiszek
+   * @param {number} params.duration - Czas trwania generacji w milisekundach
+   * @param {number} params.generated_count - Liczba wygenerowanych fiszek
+   * @returns {Promise<Generation>} Zapisany rekord generacji z bazy danych
+   * @throws {GenerationServiceError} Gdy zapis do bazy danych się nie powiedzie
    */
   private async saveGeneration(params: {
     input_text: string;
@@ -191,7 +257,13 @@ export class GenerationService {
   }
 
   /**
-   * Logs generation error to the database
+   * Zapisuje błąd generacji fiszek do bazy danych.
+   * Używana do celów diagnostycznych i monitorowania.
+   *
+   * @private
+   * @param {GenerationServiceError} error - Błąd generacji do zalogowania
+   * @param {string} [inputText] - Tekst wejściowy, który spowodował błąd
+   * @returns {Promise<void>}
    */
   private async logGenerationError(error: GenerationServiceError, inputText?: string): Promise<void> {
     await this.supabase.from("generation_errors").insert({

@@ -1,3 +1,10 @@
+/**
+ * @fileoverview Moduł obsługujący operacje na fiszkach (Cards) w bazie danych Supabase.
+ * Zapewnia funkcjonalność CRUD dla pojedynczych fiszek w zestawach.
+ * @module CardsService
+ * @requires @supabase/supabase-js
+ */
+
 import type { SupabaseClient } from "@/db/supabase.client";
 import type {
   UpdateCardCommand,
@@ -7,7 +14,16 @@ import type {
   CardCreateInput,
 } from "@/types";
 
+/**
+ * Klasa reprezentująca błędy specyficzne dla operacji na fiszkach.
+ * @extends Error
+ */
 export class CardsServiceError extends Error {
+  /**
+   * Tworzy nową instancję błędu CardsServiceError.
+   * @param {string} message - Szczegółowy opis błędu
+   * @param {string} code - Unikalny kod błędu używany do identyfikacji typu problemu
+   */
   constructor(
     message: string,
     public readonly code: string
@@ -17,18 +33,32 @@ export class CardsServiceError extends Error {
   }
 }
 
+/**
+ * Serwis odpowiedzialny za zarządzanie pojedynczymi fiszkami w systemie.
+ * Obsługuje operacje CRUD na fiszkach w kontekście zestawów fiszek.
+ */
 export class CardsService {
+  /**
+   * Tworzy nową instancję serwisu CardsService.
+   * @param {SupabaseClient} supabase - Klient bazy danych Supabase używany do wykonywania operacji
+   */
   constructor(private readonly supabase: SupabaseClient) {}
 
   /**
-   * Aktualizuje istniejącą kartę w zestawie
-   * @param cardSetId - ID zestawu kart
-   * @param cardId - ID karty do aktualizacji
-   * @param data - Dane do aktualizacji
-   * @param userId - ID użytkownika wykonującego operację
-   * @throws {CardsServiceError} Gdy zestaw kart nie istnieje lub brak dostępu
-   * @throws {CardsServiceError} Gdy karta nie istnieje w zestawie
-   * @throws {CardsServiceError} Gdy nie udało się zaktualizować karty
+   * Aktualizuje istniejącą fiszkę w zestawie.
+   *
+   * @param {string} cardSetId - Identyfikator zestawu fiszek
+   * @param {string} cardId - Identyfikator fiszki do aktualizacji
+   * @param {UpdateCardCommand} data - Dane do aktualizacji zawierające front i back
+   * @param {string} userId - Identyfikator użytkownika wykonującego operację
+   * @returns {Promise<UpdateCardResponseDTO>} Zaktualizowana fiszka
+   * @throws {CardsServiceError} CARD_SET_NOT_FOUND - Gdy zestaw fiszek nie istnieje lub użytkownik nie ma do niego dostępu
+   * @throws {CardsServiceError} CARD_NOT_FOUND - Gdy fiszka nie istnieje w danym zestawie
+   * @throws {CardsServiceError} UPDATE_CARD_FAILED - Gdy operacja aktualizacji nie powiodła się
+   *
+   * @remarks
+   * Metoda automatycznie aktualizuje pole source na 'ai_edited' jeśli fiszka była wcześniej wygenerowana przez AI.
+   * Zachowuje oryginalne źródło dla fiszek utworzonych przez użytkownika.
    */
   async updateCard(
     cardSetId: string,
@@ -81,13 +111,19 @@ export class CardsService {
   }
 
   /**
-   * Usuwa kartę z zestawu
-   * @param cardSetId - ID zestawu kart
-   * @param cardId - ID karty do usunięcia
-   * @param userId - ID użytkownika wykonującego operację
-   * @throws {CardsServiceError} Gdy zestaw kart nie istnieje lub brak dostępu
-   * @throws {CardsServiceError} Gdy karta nie istnieje w zestawie
-   * @throws {CardsServiceError} Gdy nie udało się usunąć karty
+   * Usuwa fiszkę z zestawu.
+   *
+   * @param {string} cardSetId - Identyfikator zestawu fiszek
+   * @param {string} cardId - Identyfikator fiszki do usunięcia
+   * @param {string} userId - Identyfikator użytkownika wykonującego operację
+   * @returns {Promise<DeleteCardResponseDTO>} Obiekt potwierdzający usunięcie fiszki
+   * @throws {CardsServiceError} CARD_SET_NOT_FOUND - Gdy zestaw fiszek nie istnieje lub użytkownik nie ma do niego dostępu
+   * @throws {CardsServiceError} CARD_NOT_FOUND - Gdy fiszka nie istnieje w danym zestawie
+   * @throws {CardsServiceError} DELETE_CARD_FAILED - Gdy operacja usunięcia nie powiodła się
+   *
+   * @remarks
+   * Operacja jest nieodwracalna - usuniętej fiszki nie można przywrócić.
+   * Przed usunięciem wykonywana jest weryfikacja uprawnień użytkownika do zestawu.
    */
   async deleteCard(cardSetId: string, cardId: string, userId: string): Promise<DeleteCardResponseDTO> {
     // 1. Sprawdź czy zestaw kart istnieje i należy do użytkownika
@@ -131,13 +167,20 @@ export class CardsService {
   }
 
   /**
-   * Dodaje nowe fiszki do zestawu
-   * @param cardSetId - ID zestawu fiszek
-   * @param cards - Lista fiszek do dodania
-   * @param userId - ID użytkownika wykonującego operację
-   * @returns Lista utworzonych fiszek
-   * @throws {CardsServiceError} Gdy zestaw fiszek nie istnieje lub brak dostępu
-   * @throws {CardsServiceError} Gdy nie udało się utworzyć fiszek
+   * Dodaje nowe fiszki do istniejącego zestawu.
+   *
+   * @param {string} cardSetId - Identyfikator zestawu fiszek
+   * @param {CardCreateInput[]} cards - Lista fiszek do dodania
+   * @param {string} userId - Identyfikator użytkownika wykonującego operację
+   * @returns {Promise<CardDTO[]>} Lista utworzonych fiszek
+   * @throws {CardsServiceError} CARD_SET_NOT_FOUND - Gdy zestaw fiszek nie istnieje lub użytkownik nie ma do niego dostępu
+   * @throws {CardsServiceError} CREATE_CARDS_FAILED - Gdy nie udało się utworzyć fiszek
+   * @throws {CardsServiceError} NO_CARDS_CREATED - Gdy żadna fiszka nie została utworzona
+   *
+   * @remarks
+   * - Metoda obsługuje tworzenie wielu fiszek w jednej operacji
+   * - Dla fiszek utworzonych przez użytkownika (source: 'user_created') pole generation_id jest automatycznie ustawiane na null
+   * - Wszystkie fiszki są dodawane w ramach jednej transakcji - jeśli którakolwiek się nie powiedzie, żadna nie zostanie utworzona
    */
   async createCards(cardSetId: string, cards: CardCreateInput[], userId: string): Promise<CardDTO[]> {
     // 1. Sprawdź czy zestaw fiszek istnieje i należy do użytkownika

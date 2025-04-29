@@ -1,7 +1,21 @@
+/**
+ * @fileoverview Moduł obsługujący operacje na zestawach fiszek (CardSets) w bazie danych Supabase.
+ * @module CardSetService
+ */
+
 import type { SupabaseClient } from "../../db/supabase.client";
 import type { CardSetDTO, CreateCardSetCommand, CardSet, UUID, CardSetDetailDTO, Card } from "../../types";
 
+/**
+ * Klasa reprezentująca błędy związane z operacjami na zestawach fiszek.
+ * @extends Error
+ */
 export class CardSetServiceError extends Error {
+  /**
+   * Tworzy nową instancję błędu CardSetServiceError.
+   * @param {string} message - Komunikat błędu
+   * @param {string} code - Kod błędu używany do identyfikacji typu błędu
+   */
   constructor(
     message: string,
     public readonly code: string
@@ -11,9 +25,24 @@ export class CardSetServiceError extends Error {
   }
 }
 
+/**
+ * Serwis odpowiedzialny za zarządzanie zestawami fiszek w systemie.
+ * Obsługuje operacje CRUD na zestawach fiszek oraz powiązanych z nimi kartach.
+ */
 export class CardSetService {
+  /**
+   * Tworzy nową instancję serwisu CardSetService.
+   * @param {SupabaseClient} supabase - Klient bazy danych Supabase
+   */
   constructor(private readonly supabase: SupabaseClient) {}
 
+  /**
+   * Tworzy nowy zestaw fiszek dla określonego użytkownika.
+   * @param {UUID} userId - Identyfikator użytkownika tworzącego zestaw
+   * @param {CreateCardSetCommand} command - Dane nowego zestawu
+   * @returns {Promise<CardSetDTO>} Utworzony zestaw fiszek
+   * @throws {CardSetServiceError} Gdy wystąpi błąd podczas tworzenia zestawu
+   */
   async createCardSet(userId: UUID, command: CreateCardSetCommand): Promise<CardSetDTO> {
     const { data, error } = await this.supabase
       .from("card_sets")
@@ -45,6 +74,15 @@ export class CardSetService {
     };
   }
 
+  /**
+   * Pobiera listę zestawów fiszek dla określonego użytkownika z obsługą paginacji i sortowania.
+   * @param {UUID} userId - Identyfikator użytkownika
+   * @param {number} page - Numer strony (rozpoczynając od 1)
+   * @param {number} limit - Liczba elementów na stronie
+   * @param {"created_at" | "updated_at" | "name"} [sort] - Opcjonalne pole sortowania
+   * @returns {Promise<{cardSets: CardSetDTO[], total: number}>} Lista zestawów i całkowita liczba dostępnych zestawów
+   * @throws {CardSetServiceError} Gdy wystąpi błąd podczas pobierania zestawów
+   */
   async listCardSets(
     userId: UUID,
     page: number,
@@ -94,6 +132,12 @@ export class CardSetService {
     };
   }
 
+  /**
+   * Pobiera szczegółowe informacje o zestawie fiszek wraz z powiązanymi kartami.
+   * @param {UUID} cardSetId - Identyfikator zestawu fiszek
+   * @returns {Promise<CardSetDetailDTO | null>} Szczegóły zestawu lub null jeśli nie znaleziono
+   * @throws {CardSetServiceError} Gdy wystąpi błąd podczas pobierania danych
+   */
   async getCardSetDetails(cardSetId: UUID): Promise<CardSetDetailDTO | null> {
     // Pobranie podstawowych informacji o zestawie
     const { data: cardSet, error: cardSetError } = await this.supabase
@@ -141,6 +185,14 @@ export class CardSetService {
     };
   }
 
+  /**
+   * Aktualizuje nazwę zestawu fiszek.
+   * @param {UUID} userId - Identyfikator właściciela zestawu
+   * @param {UUID} cardSetId - Identyfikator zestawu do aktualizacji
+   * @param {string} name - Nowa nazwa zestawu
+   * @returns {Promise<CardSetDTO>} Zaktualizowany zestaw fiszek
+   * @throws {CardSetServiceError} Gdy wystąpi błąd podczas aktualizacji lub brak uprawnień
+   */
   async updateCardSet(userId: UUID, cardSetId: UUID, name: string): Promise<CardSetDTO> {
     // Sprawdzenie czy zestaw istnieje i należy do użytkownika
     const { data: existingSet, error: checkError } = await this.supabase
@@ -190,6 +242,14 @@ export class CardSetService {
     };
   }
 
+  /**
+   * Usuwa zestaw fiszek wraz ze wszystkimi powiązanymi kartami.
+   * @param {UUID} userId - Identyfikator właściciela zestawu
+   * @param {UUID} cardSetId - Identyfikator zestawu do usunięcia
+   * @returns {Promise<void>}
+   * @throws {CardSetServiceError} Gdy wystąpi błąd podczas usuwania lub brak uprawnień
+   * @remarks Usunięcie jest kaskadowe - wszystkie powiązane karty zostaną również usunięte
+   */
   async deleteCardSet(userId: UUID, cardSetId: UUID): Promise<void> {
     // Sprawdzenie czy zestaw istnieje i należy do użytkownika
     const { data: existingSet, error: checkError } = await this.supabase

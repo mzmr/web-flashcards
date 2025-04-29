@@ -1,19 +1,43 @@
+/**
+ * @fileoverview Moduł obsługujący integrację z API OpenRouter dla generowania odpowiedzi AI.
+ * @module OpenRouterService
+ */
+
 import { z } from "zod";
 import { OpenRouterError, OpenRouterAPIError, OpenRouterValidationError } from "./openrouter.types";
 import type { ModelParams, ConfigOptions, RequestPayload, Response, RetryConfig } from "./openrouter.types";
 import { OPENROUTER_API_KEY, OPENROUTER_API_URL } from "astro:env/server";
 
+/**
+ * Klasa obsługująca komunikację z API OpenRouter.
+ * Zapewnia interfejs do wysyłania wiadomości i otrzymywania odpowiedzi od modeli AI.
+ *
+ * @class OpenRouterService
+ * @throws {OpenRouterError} Gdy brak wymaganego klucza API w zmiennych środowiskowych
+ */
 export class OpenRouterService {
-  // Pola publiczne
+  /** @public URL endpointu API OpenRouter */
   public readonly apiUrl: string;
+
+  /** @public Klucz API do autoryzacji żądań */
   public readonly apiKey: string;
+
+  /** @public Nazwa modelu AI do wykorzystania */
   public modelName: string;
+
+  /** @public Parametry konfiguracyjne modelu */
   public modelParams: ModelParams;
+
+  /** @public Wiadomość systemowa dodawana do każdego żądania */
   public systemMessage: string;
+
+  /** @public Opcjonalny format odpowiedzi */
   public responseFormat?: ConfigOptions["responseFormat"];
 
-  // Pola prywatne
+  /** @private Schema walidacji odpowiedzi */
   private _responseSchema: z.ZodType;
+
+  /** @private Konfiguracja mechanizmu ponawiania żądań */
   private _retryConfig: RetryConfig = {
     maxAttempts: 3,
     initialDelayMs: 1000,
@@ -22,6 +46,13 @@ export class OpenRouterService {
     retryableStatusCodes: [408, 429, 500, 502, 503, 504],
   };
 
+  /**
+   * Tworzy nową instancję serwisu OpenRouter.
+   *
+   * @constructor
+   * @param {z.ZodType} responseSchema - Schema Zod do walidacji odpowiedzi API
+   * @throws {OpenRouterError} Gdy brak wymaganego klucza API
+   */
   constructor(responseSchema: z.ZodType) {
     // Inicjalizacja z zmiennych środowiskowych
     this.apiUrl = OPENROUTER_API_URL || "https://openrouter.ai/api/v1/chat/completions";
@@ -42,6 +73,15 @@ export class OpenRouterService {
     this._responseSchema = responseSchema;
   }
 
+  /**
+   * Waliduje odpowiedź otrzymaną z API.
+   *
+   * @private
+   * @param {unknown} data - Dane do walidacji
+   * @returns {Promise<Response>} Zwalidowana odpowiedź
+   * @throws {OpenRouterValidationError} Gdy dane nie przejdą walidacji
+   * @throws {OpenRouterError} Gdy dane są puste lub nieprawidłowego typu
+   */
   private async _validateResponse(data: unknown): Promise<Response> {
     try {
       if (!data || typeof data !== "object") {
@@ -59,6 +99,13 @@ export class OpenRouterService {
     }
   }
 
+  /**
+   * Obsługuje błędy powstałe podczas komunikacji z API.
+   *
+   * @private
+   * @param {unknown} error - Błąd do obsłużenia
+   * @throws {OpenRouterError} Przetworzona informacja o błędzie
+   */
   private async _handleError(error: unknown): Promise<never> {
     console.error("OpenRouter service error:", error);
 
@@ -79,6 +126,13 @@ export class OpenRouterService {
     throw new OpenRouterError(error instanceof Error ? error.message : "An unknown error occurred");
   }
 
+  /**
+   * Przygotowuje payload żądania do API.
+   *
+   * @private
+   * @param {string} userMessage - Wiadomość od użytkownika
+   * @returns {RequestPayload} Przygotowany payload żądania
+   */
   private _prepareRequest(userMessage: string): RequestPayload {
     const messages = [
       {
@@ -104,6 +158,16 @@ export class OpenRouterService {
     return payload;
   }
 
+  /**
+   * Wykonuje operację z mechanizmem automatycznego ponawiania.
+   *
+   * @private
+   * @template T
+   * @param {() => Promise<T>} operation - Operacja do wykonania
+   * @param {number} [attempt=1] - Numer próby
+   * @returns {Promise<T>} Wynik operacji
+   * @throws {OpenRouterAPIError} Gdy wszystkie próby się nie powiodą
+   */
   private async _executeWithRetry<T>(operation: () => Promise<T>, attempt = 1): Promise<T> {
     try {
       return await operation();
@@ -130,6 +194,17 @@ export class OpenRouterService {
     }
   }
 
+  /**
+   * Konfiguruje instancję serwisu.
+   *
+   * @public
+   * @param {ConfigOptions} options - Opcje konfiguracyjne
+   * @param {string} [options.modelName] - Nazwa modelu AI
+   * @param {ModelParams} [options.modelParams] - Parametry modelu
+   * @param {string} [options.systemMessage] - Wiadomość systemowa
+   * @param {object} [options.responseFormat] - Format odpowiedzi
+   * @param {RetryConfig} [options.retryConfig] - Konfiguracja ponawiania
+   */
   public configure(options: ConfigOptions): void {
     if (options.modelName) {
       this.modelName = options.modelName;
@@ -158,6 +233,16 @@ export class OpenRouterService {
     }
   }
 
+  /**
+   * Wysyła wiadomość do API i zwraca odpowiedź.
+   *
+   * @public
+   * @param {string} userMessage - Wiadomość do wysłania
+   * @returns {Promise<Response>} Odpowiedź z API
+   * @throws {OpenRouterError} Gdy wystąpi błąd podczas komunikacji
+   * @throws {OpenRouterValidationError} Gdy odpowiedź nie przejdzie walidacji
+   * @throws {OpenRouterAPIError} Gdy API zwróci błąd
+   */
   public async sendMessage(userMessage: string): Promise<Response> {
     try {
       const payload = this._prepareRequest(userMessage);
@@ -186,6 +271,12 @@ export class OpenRouterService {
     }
   }
 
+  /**
+   * Zwraca aktualną nazwę używanego modelu.
+   *
+   * @public
+   * @returns {string} Nazwa modelu
+   */
   public getModelName(): string {
     return this.modelName;
   }
