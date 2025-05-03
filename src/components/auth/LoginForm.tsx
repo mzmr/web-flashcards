@@ -7,6 +7,7 @@ import { AlertCircle } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { navigate } from "astro:transitions/client";
 
 const loginSchema = z.object({
   email: z.string().email("Nieprawidłowy format adresu email"),
@@ -46,8 +47,7 @@ export function LoginForm() {
         throw new Error(responseData.error || "Wystąpił błąd podczas logowania");
       }
 
-      // Po udanym logowaniu przekieruj na /card-sets
-      window.location.href = "/card-sets";
+      navigate("/card-sets");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Wystąpił nieoczekiwany błąd");
     } finally {
