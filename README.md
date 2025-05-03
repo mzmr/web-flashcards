@@ -1,7 +1,7 @@
 # Web Flashcards
 
 ## Test heading
-Test text.
+Test updated text.
 
 ## Table of Contents
 - [Project Description](#project-description)
