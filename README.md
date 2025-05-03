@@ -12,10 +12,10 @@
 ## Project Description
 Web Flashcards is a web application designed to facilitate the creation of educational flashcards. It offers two primary functionalities:
 
-- **AI Flashcard Generation:** Automatically generate flashcards from a provided text input.
-- **Manual Flashcard Creation:** Create flashcards manually by entering text for the front and back.
+- **AI Flashcard Generation:** Automatically generate flashcards from a provided text input (requires user authentication).
+- **Manual Flashcard Creation:** Create flashcards manually by entering text for the front and back. Users can create flashcards locally without logging in, or save them to their account when logged in.
 
-This application utilizes spaced repetition techniques to enhance learning efficiency, while providing a user-friendly interface for managing flashcard sets and secure user authentication.
+The application provides a user-friendly interface for managing flashcard sets and includes secure user authentication for accessing features like AI generation and cloud storage.
 
 ## Tech Stack
 - **Frontend:** Astro 5, React 19, TypeScript 5, Tailwind CSS 4, Shadcn/ui
@@ -66,13 +66,14 @@ This application utilizes spaced repetition techniques to enhance learning effic
 ## Project Scope
 The project is centered around the following key features:
 
-- **AI-Generated Flashcards:** Process input text to automatically generate flashcards.
-- **Manual Flashcard Creation:** Provide users with the ability to manually create and edit flashcards.
+- **AI-Generated Flashcards:** Process input text to automatically generate flashcards (requires login).
+- **Manual Flashcard Creation:** Provide users with the ability to manually create and edit flashcards, either locally or within their account.
 - **Flashcard Management:** View, edit, and delete individual flashcards or entire flashcard sets.
-- **User Authentication:** Support for user registration, login, and secure session management.
+- **User Authentication:** Support for user registration, login, and secure session management to access account-specific features.
+- **Local Storage:** Ability for non-authenticated users to create and manage flashcard sets stored locally in their browser.
 
 ## Project Status
-This project is currently an MVP and is under active development.
+This project is currently an MVP and is under active development. Key features like user registration and password recovery are not yet implemented.
 
 ## License
 This project is licensed under the MIT License. 
