@@ -27,6 +27,7 @@ The application provides a user-friendly interface for managing flashcard sets a
   - **Accessibility & Performance:** axe-core, Lighthouse
 - **CI/CD & Hosting:** GitHub Actions & DigitalOcean
 - **Node.js Version:** 22.14.0 (as specified in .nvmrc)
+- blablabla
 
 ## Getting Started Locally
 1. **Clone the repository:**
